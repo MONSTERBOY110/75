@@ -1,0 +1,11 @@
+rules_version = '2';
+
+// 75 — each student may only read/write data under their own user document.
+// Deploy with: firebase deploy --only firestore:rules
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}

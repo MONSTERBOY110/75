@@ -1,0 +1,192 @@
+@import '@fontsource/vt323/400.css';
+@import '@fontsource/press-start-2p/400.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-background text-on-surface font-sans antialiased;
+    overscroll-behavior-y: none;
+    /* Faint blue console grid over the black canvas */
+    background-color: #0a0a0a;
+    background-image:
+      linear-gradient(rgba(56, 189, 248, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(56, 189, 248, 0.04) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  /* Everything renders crisp / pixelated - even avatar photos read 8-bit */
+  img {
+    image-rendering: pixelated;
+  }
+
+  /* CRT scanline overlay with a subtle flicker */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0) 0,
+      rgba(0, 0, 0, 0) 2px,
+      rgba(0, 0, 0, 0.18) 3px,
+      rgba(0, 0, 0, 0.18) 3px
+    );
+    mix-blend-mode: multiply;
+    opacity: 0.95;
+    animation: crt-flicker 4.5s infinite steps(1);
+  }
+
+  /* Faint screen-wide brightness pulse - the "tube warming" flutter */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    pointer-events: none;
+    background: rgba(56, 189, 248, 0.015);
+    animation: crt-glow 3.1s infinite ease-in-out;
+  }
+
+  /* Irregular low-amplitude scanline flicker (reads as a faint CRT shimmer) */
+  @keyframes crt-flicker {
+    0% { opacity: 0.95; }
+    10% { opacity: 0.92; }
+    18% { opacity: 0.97; }
+    27% { opacity: 0.9; }
+    38% { opacity: 0.96; }
+    52% { opacity: 0.93; }
+    63% { opacity: 0.98; }
+    74% { opacity: 0.91; }
+    86% { opacity: 0.96; }
+    100% { opacity: 0.95; }
+  }
+
+  @keyframes crt-glow {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+
+  /* Honour reduced-motion: hold the overlays steady, no flicker */
+  @media (prefers-reduced-motion: reduce) {
+    body::after,
+    body::before {
+      animation: none;
+    }
+  }
+
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  /* Tint the native date picker indicator to the accent (#38bdf8) */
+  input[type='date']::-webkit-calendar-picker-indicator {
+    filter: invert(72%) sepia(38%) saturate(1163%) hue-rotate(166deg) brightness(101%) contrast(96%);
+    cursor: pointer;
+  }
+}
+
+@layer components {
+  .app-shell {
+    @apply mx-auto flex min-h-full w-full max-w-app flex-col;
+  }
+
+  /* The pixel wordmark */
+  .wordmark {
+    @apply font-pixel uppercase tracking-tight text-primary;
+    text-shadow: 3px 3px 0 #000;
+  }
+
+  /* --- Buttons: chunky raised pixel boxes that "press" on tap --- */
+  .btn {
+    @apply inline-flex h-14 items-center justify-center gap-2 whitespace-nowrap px-6
+           font-pixel text-[11px] uppercase tracking-wider transition-all duration-75
+           disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn border-[3px] border-black bg-primary text-on-primary;
+    box-shadow: 4px 4px 0 0 #1b7fa8;
+  }
+  .btn-primary:active {
+    transform: translate(4px, 4px);
+    box-shadow: 0 0 0 0 transparent;
+  }
+  .btn-secondary {
+    @apply btn border-[3px] border-primary bg-transparent text-primary;
+    box-shadow: 4px 4px 0 0 #1b7fa8;
+  }
+  .btn-secondary:active {
+    transform: translate(4px, 4px);
+    box-shadow: 0 0 0 0 transparent;
+  }
+  .btn-ghost {
+    @apply btn border-[3px] border-outline bg-surface-container-high text-on-surface;
+    box-shadow: 4px 4px 0 0 #000;
+  }
+  .btn-ghost:active {
+    transform: translate(4px, 4px);
+    box-shadow: 0 0 0 0 transparent;
+  }
+  .btn-danger {
+    @apply btn border-[3px] border-secondary bg-transparent text-secondary;
+    box-shadow: 4px 4px 0 0 #7a1a10;
+  }
+  .btn-danger:active {
+    transform: translate(4px, 4px);
+    box-shadow: 0 0 0 0 transparent;
+  }
+
+  /* --- Surfaces --- */
+  .card {
+    @apply border-2 border-outline bg-surface-container p-4;
+    box-shadow: 4px 4px 0 0 #000;
+  }
+
+  .input {
+    @apply h-14 w-full border-2 border-outline bg-surface-container-high px-4 text-xl
+           text-on-surface placeholder:text-on-surface-variant/70
+           focus:border-primary focus:outline-none;
+    transition: border-color 0.1s;
+  }
+
+  .field-label {
+    @apply mb-2 block font-pixel text-[9px] uppercase leading-relaxed tracking-wider text-on-surface-variant;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1 border-2 px-2 py-1 font-pixel text-[8px] uppercase tracking-wider;
+  }
+
+  /* A raised pixel box that presses into its own shadow on tap. Used by every
+     tappable surface that isn't a .btn (subject rows, section picker, marks). */
+  .press {
+    @apply transition-transform duration-75 active:translate-x-[3px] active:translate-y-[3px];
+  }
+  .press:active {
+    box-shadow: 0 0 0 0 transparent !important;
+  }
+  .press:disabled,
+  .press[aria-disabled='true'] {
+    @apply pointer-events-none translate-x-0 translate-y-0 opacity-50;
+  }
+}

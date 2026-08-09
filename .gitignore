@@ -1,0 +1,53 @@
+# dependencies
+node_modules
+.pnp
+.pnp.js
+
+# build output
+dist
+dist-ssr
+*.local
+
+# env / secrets
+.env
+.env.local
+.env.*.local
+
+# editor / OS
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+.idea
+.vscode/*
+!.vscode/extensions.json
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs
+*.log
+
+# PWA generated dev artifacts
+dev-dist
+
+# test artifacts
+.playwright-mcp
+coverage
+
+# agent scratch
+.superpowers/
+
+# Firebase deploy cache
+.firebase/
+
+# TypeScript incremental build info
+*.tsbuildinfo
+
+# `tsc -b` emit from the composite node config — byproducts, not sources
+vite.config.js
+vite.config.d.ts
+vitest.config.js
+vitest.config.d.ts

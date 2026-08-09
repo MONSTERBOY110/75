@@ -1,0 +1,31 @@
+{
+  "hosting": {
+    "public": "dist",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [{ "source": "**", "destination": "/index.html" }],
+    "headers": [
+      {
+        "comment": "Default: never cache. Firebase applies the LAST matching rule, so the broad rule goes first and the specific ones below override it. This covers the app shell (every SPA route serves /index.html), sw.js, registerSW.js, workbox-*.js and the manifest — all unhashed, all must be refetched so a new deploy takes effect on the next launch.",
+        "source": "**",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
+      },
+      {
+        "comment": "Everything Vite fingerprints lives here — safe to cache forever.",
+        "source": "/assets/**",
+        "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+      },
+      {
+        "comment": "Icons are unhashed and referenced by the manifest, so cache them for a week rather than a year — a rebrand then lands in days, not months.",
+        "source": "/@(icons)/**",
+        "headers": [{ "key": "Cache-Control", "value": "public, max-age=604800" }]
+      },
+      {
+        "source": "**/*.@(svg|ico)",
+        "headers": [{ "key": "Cache-Control", "value": "public, max-age=604800" }]
+      }
+    ]
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  }
+}
