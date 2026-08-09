@@ -4,6 +4,51 @@ A college attendance tracker. Mark every class, watch your percentage, stay abov
 
 Mobile-first React PWA with a retro-arcade skin - black canvas, pixel type, hard edges, light-blue accent.
 
+---
+
+# Install it
+
+### **[seventyfive75.web.app](https://seventyfive75.web.app)**
+
+<img src="docs/install-qr.svg" alt="QR code for seventyfive75.web.app" width="200" />
+
+Point your camera at that and it opens straight to the app. No typing, no app store.
+
+Then install it so it lives on your home screen like any other app, with no address bar:
+
+**Android (Chrome)**
+Open the link, then either tap the **Install** banner Chrome shows at the bottom, or **⋮ menu -> Add to Home screen -> Install**. It lands in your app drawer and opens full screen.
+
+**iPhone / iPad (Safari)**
+Open the link **in Safari** (Chrome on iOS cannot install web apps), then **Share button -> Add to Home Screen -> Add**.
+
+**Desktop (Chrome / Edge)**
+Click the **install icon** at the right of the address bar, or **⋮ menu -> Cast, save and share -> Install page as app**.
+
+Once installed it works offline for anything already loaded, and updates itself in the background every time it is opened.
+
+## Want a real Android APK?
+
+Installing above still starts in a browser. If you want a file you can send round WhatsApp and install like a normal Android app, wrap it as a Trusted Web Activity:
+
+**Easiest, nothing to install:** go to [pwabuilder.com](https://www.pwabuilder.com), paste `https://seventyfive75.web.app`, hit **Package for stores -> Android**, and download the `.apk`. Anyone installing it will need to allow **Install unknown apps** once, since it is not coming from the Play Store.
+
+**From the command line**, if you have a JDK and the Android SDK:
+
+```bash
+npm install -g @bubblewrap/cli
+bubblewrap init --manifest https://seventyfive75.web.app/manifest.webmanifest
+bubblewrap build          # produces app-release-signed.apk
+```
+
+Either route produces an app that is genuinely just this site in a full-screen shell, so it stays up to date on its own with no reinstalling.
+
+There is no iOS equivalent. Apple only allows web apps on the home screen through the Safari route above.
+
+> Regenerate the QR after changing the URL with `npm run qr` (or `APP_URL=https://example.com npm run qr`).
+
+---
+
 ## What it does
 
 - Pick your **year, semester and section** once; the app already knows your routine.
@@ -34,6 +79,7 @@ Without `.env` the sign-in screens still render, but no auth or data will work.
 | `npm run lint` | Type-check only |
 | `npm test` | Vitest - the attendance math specs |
 | `npm run icons` | Regenerate PWA PNGs from `public/*.svg` (needs `sharp`) |
+| `npm run qr` | Regenerate the install QR in `docs/` |
 
 ## Deploying
 
