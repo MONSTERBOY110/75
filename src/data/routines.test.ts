@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { SECTIONS, getSection, slotsForBatch, weeklyClassCount } from './routines'
+import {
+  BUILT_IN_COLLEGE,
+  SECTIONS,
+  getSection,
+  isBuiltInCollege,
+  slotsForBatch,
+  weeklyClassCount,
+} from './routines'
 import { SUBJECTS } from './subjects'
 import { minutesOfDay } from '../utils/date'
 import type { Slot } from '../types'
@@ -53,6 +60,32 @@ describe('routine data integrity', () => {
         }
       }
     }
+  })
+
+  it('carries a subject entry for every subject its slots reference', () => {
+    for (const section of SECTIONS) {
+      const listed = new Set(section.subjects.map((s) => s.id))
+      for (const slot of section.slots) {
+        expect(listed.has(slot.subjectId), `${section.id} omits ${slot.subjectId}`).toBe(true)
+      }
+      // And nothing listed that is never taught.
+      const taught = new Set(section.slots.map((s) => s.subjectId))
+      for (const subject of section.subjects) {
+        expect(taught.has(subject.id), `${section.id} lists unused ${subject.id}`).toBe(true)
+      }
+    }
+  })
+
+  it('belongs to the built-in college', () => {
+    for (const section of SECTIONS) {
+      expect(section.collegeId).toBe(BUILT_IN_COLLEGE.id)
+    }
+  })
+
+  it('treats a missing college id as the built-in one, so old accounts keep working', () => {
+    expect(isBuiltInCollege(undefined)).toBe(true)
+    expect(isBuiltInCollege(BUILT_IN_COLLEGE.id)).toBe(true)
+    expect(isBuiltInCollege('some-firestore-id')).toBe(false)
   })
 
   it('never ends a class before it starts', () => {

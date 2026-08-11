@@ -1,7 +1,9 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { ProtectedRoute, PublicOnlyRoute, SetupGate } from './components/auth/Guards'
 import { AppLayout } from './components/layout/AppLayout'
+import { UpdatePrompt } from './components/layout/UpdatePrompt'
 import { StatsProvider } from './context/StatsContext'
+import AddCollegePage from './pages/AddCollegePage'
 import HomePage from './pages/HomePage'
 import ProfilePage from './pages/ProfilePage'
 import SetupPage from './pages/SetupPage'
@@ -12,6 +14,16 @@ import SubjectsPage from './pages/SubjectsPage'
 import WelcomePage from './pages/WelcomePage'
 
 export default function App() {
+  return (
+    <>
+      {/* Sits above every screen so a new deploy is offered wherever they are. */}
+      <UpdatePrompt />
+      <AppRoutes />
+    </>
+  )
+}
+
+function AppRoutes() {
   return (
     <Routes>
       {/* Public auth screens - redirect away if already signed in */}
@@ -25,6 +37,7 @@ export default function App() {
       <Route element={<ProtectedRoute />}>
         <Route element={<SetupGate />}>
           <Route path="/setup" element={<SetupPage />} />
+          <Route path="/add-college" element={<AddCollegePage />} />
           {/* One attendance listener, shared by every screen below. */}
           <Route element={<StatsProvider />}>
             {/* Subject detail is full-screen with its own back header. */}

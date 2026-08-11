@@ -1,6 +1,5 @@
 import { CalendarOff } from 'lucide-react'
 import { recordKey, type LogStatus } from '../../lib/attendance'
-import { getSubject } from '../../data/subjects'
 import { useMarking, type MarkTarget } from '../../hooks/useMarking'
 import type { Stats } from '../../hooks/useStats'
 import { formatDayAndDate, formatTime } from '../../utils/date'
@@ -9,7 +8,7 @@ import { MarkButtons } from './MarkButtons'
 /** Marking surface for today's classes - the screen you open after each lecture. */
 export function TodayPanel({ stats }: { stats: Stats }) {
   const { mark, markAllNotHeld, busyKey, error } = useMarking()
-  const { todaySlots, todayKey, todayDate, records } = stats
+  const { todaySlots, todayKey, todayDate, records, subjectsById } = stats
 
   const statusOf = (slotId: string): LogStatus =>
     records.find((r) => r.dateKey === todayKey && r.slotId === slotId)?.status ?? 'unmarked'
@@ -38,15 +37,15 @@ export function TodayPanel({ stats }: { stats: Stats }) {
       ) : (
         <div className="flex flex-col gap-3">
           {todaySlots.map((slot) => {
-            const subject = getSubject(slot.subjectId)
+            const subject = subjectsById.get(slot.subjectId)
             const target = targets.find((t) => t.slotId === slot.id)!
             return (
               <div key={slot.id} className="card p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate text-body-lg text-on-surface">{subject.name}</p>
+                    <p className="truncate text-body-lg text-on-surface">{subject?.name ?? slot.subjectId}</p>
                     <p className="mt-0.5 font-pixel text-[8px] uppercase tracking-wider text-on-surface-variant">
-                      {subject.code}
+                      {subject?.code ?? ""}
                     </p>
                   </div>
                   <span className="shrink-0 text-body-sm text-on-surface-variant">

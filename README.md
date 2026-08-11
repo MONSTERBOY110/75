@@ -92,7 +92,59 @@ firebase deploy               # hosting + firestore rules
 
 `firebase.json` already carries the correct PWA cache headers: never cache the service worker, shell or manifest; cache hashed assets for a year.
 
-## Adding a section
+## Shipping an update
+
+`registerType: 'prompt'` with `skipWaiting: false`, so a new deploy never reloads
+underneath someone mid-task. Instead `UpdatePrompt` shows a banner with an
+**Update** button; tapping it activates the waiting worker and reloads onto the
+new bundle. Nobody has to be told to refresh.
+
+The banner drives the reload itself rather than leaving it to the library:
+activating the waiting worker alone leaves the page running the old JavaScript,
+and the old worker keeps serving the old shell from its precache until the new
+one claims the page. So it waits for `controllerchange`, then reloads, with a
+3s timeout in case that event never arrives.
+
+A service worker only notices a deploy when it looks, so as well as the check on
+load it re-checks every 30 minutes and whenever the app returns to the
+foreground. An installed PWA can sit open for days.
+
+Bump `version` in `package.json` when you deploy: it is injected as
+`__APP_VERSION__` and shown at the bottom of Profile, so you can tell which build
+someone is running.
+
+## Colleges
+
+Students pick a college from a searchable dropdown when they create an account.
+Two sources feed that list:
+
+- **Every college name lives in Firestore**, in the `colleges` collection.
+  The bundled college is seeded there once, under the reserved id `tbit`, by
+  `ensureBuiltInCollege`. The rules let any signed-in student create that
+  document but nobody edit or delete it, so its name cannot be changed out from
+  under everyone. `BUILT_IN_COLLEGE` in `src/data/routines.ts` is only a fallback
+  so the picker is never empty on a first run or a dropped connection.
+- **The two bundled routines** (CSE-A and CSE-B/IT) stay in `src/data/routines.ts`
+  rather than Firestore: they are unit tested, they resolve instantly and offline,
+  and existing attendance records point at their slot ids. A profile with no
+  `collegeId` is treated as belonging to `tbit`, so accounts created before
+  colleges existed keep working untouched.
+- **Everything else is contributed by students** through *Add your college* or
+  *Add your section* during setup, and stored at
+  `colleges/{id}/sections/{id}`. Contributed sections show up for everyone,
+  including alongside the bundled ones for `tbit`.
+
+College names are normalized on the way in, so `abc college of something` is
+stored as `ABC College of Something`. A live preview shows the result while
+typing, and typing an acronym in capitals always preserves it. Names are
+compared on a punctuation-free key, so `B.P. Poddar` and `BP Poddar` collapse
+into one college rather than two. See `src/utils/collegeName.ts`.
+
+A contributed section carries its own `subjects` array, because every college has
+its own syllabus. Batches are only used by the built-in routines; student-built
+routines are one flat timetable.
+
+## Adding a section to the built-in college
 
 Everything routine-shaped lives in `src/data/`.
 

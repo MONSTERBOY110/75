@@ -7,7 +7,7 @@ import { PixelBar } from '../components/attendance/PixelBar'
 import { ScreenHeader } from '../components/ui/ScreenHeader'
 import { Spinner } from '../components/ui/Spinner'
 import { useAuth } from '../context/AuthContext'
-import { SUBJECTS, getSubject } from '../data/subjects'
+
 import { useMarking } from '../hooks/useMarking'
 import { useStats } from '../context/StatsContext'
 import { band, buildLog, recordKey } from '../lib/attendance'
@@ -23,7 +23,7 @@ export default function SubjectDetailPage() {
   const [expanded, setExpanded] = useState<string | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
 
-  const subject = SUBJECTS[subjectId]
+  const subject = stats.subjectsById.get(subjectId)
 
   const log = useMemo(
     () =>
@@ -41,18 +41,19 @@ export default function SubjectDetailPage() {
 
   const stat = stats.bySubject.get(subjectId)
 
-  if (!subject) return <Navigate to="/subjects" replace />
-  // The subject exists in the catalogue but isn't taught in this section.
-  if (!stats.loading && stats.section && !stat) return <Navigate to="/subjects" replace />
+  // The subject isn't taught in this student's section (or their batch).
+  if (!stats.loading && stats.section && (!subject || !stat)) {
+    return <Navigate to="/subjects" replace />
+  }
 
   const b = band(stat?.percent ?? 0, stat?.held ?? 0)
   const advice = stat ? adviceFor(stat) : null
 
   return (
     <div className="app-shell px-margin pb-28 pt-3">
-      <ScreenHeader title={getSubject(subjectId).short} />
+      <ScreenHeader title={subject?.short ?? 'Subject'} />
 
-      {stats.loading || !stat ? (
+      {stats.loading || !stat || !subject ? (
         <div className="mt-16 flex justify-center">
           <Spinner />
         </div>
@@ -144,8 +145,8 @@ export default function SubjectDetailPage() {
       </div>
 
       <AddAttendanceSheet
-        open={sheetOpen}
-        subject={subject}
+        open={sheetOpen && Boolean(subject)}
+        subject={subject!}
         slots={slots}
         records={stats.records}
         semesterStart={profile?.semesterStartDate ?? 0}

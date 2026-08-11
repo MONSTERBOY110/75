@@ -1,4 +1,6 @@
-import type { Section, Slot } from '../types'
+import type { College, Section, Slot, Subject } from '../types'
+import { collegeNameKey } from '../utils/collegeName'
+import { getSubject } from './subjects'
 
 /**
  * Class routines, one entry per section.
@@ -92,33 +94,67 @@ const CSE_B_IT_SLOTS: Slot[] = [
   { id: 'b-fri-1450', day: 5, start: '14:50', end: '17:20', subjectId: 'esc501' },
 ]
 
+/**
+ * The college shipped with the app. Its routines stay in version control so
+ * they can be unit tested and corrected in a release; every other college is
+ * contributed by students and lives in Firestore.
+ */
+export const BUILT_IN_COLLEGE: College = {
+  id: 'tbit',
+  name: 'Techno Bengal Institute of Technology',
+  nameKey: collegeNameKey('Techno Bengal Institute of Technology'),
+  builtIn: true,
+}
+
+/** Picks out the catalogue entries a slot list actually references. */
+function subjectsUsedBy(slots: Slot[]): Subject[] {
+  const seen = new Set<string>()
+  const subjects: Subject[] = []
+  for (const slot of slots) {
+    if (seen.has(slot.subjectId)) continue
+    seen.add(slot.subjectId)
+    subjects.push(getSubject(slot.subjectId))
+  }
+  return subjects
+}
+
 export const SECTIONS: Section[] = [
   {
     id: 'y3s5-cse-a',
+    collegeId: BUILT_IN_COLLEGE.id,
     year: 3,
     semester: 5,
     label: 'CSE-A',
     status: 'available',
     batches: ['1', '2'],
+    subjects: subjectsUsedBy(CSE_A_SLOTS),
     slots: CSE_A_SLOTS,
   },
   {
     id: 'y3s5-cse-b-it',
+    collegeId: BUILT_IN_COLLEGE.id,
     year: 3,
     semester: 5,
     label: 'CSE-B / IT',
     status: 'available',
     batches: ['1', '2'],
+    subjects: subjectsUsedBy(CSE_B_IT_SLOTS),
     slots: CSE_B_IT_SLOTS,
   },
 ]
+
+/** True for the college whose routines ship in this file. */
+export function isBuiltInCollege(collegeId: string | undefined | null): boolean {
+  // Accounts created before colleges existed have no id and belong to ours.
+  return !collegeId || collegeId === BUILT_IN_COLLEGE.id
+}
 
 export function getSection(id: string | undefined | null): Section | undefined {
   if (!id) return undefined
   return SECTIONS.find((s) => s.id === id)
 }
 
-/** Every section offered for a year + semester, in listing order. */
+/** Every built-in section offered for a year + semester, in listing order. */
 export function sectionsFor(year: number, semester: number): Section[] {
   return SECTIONS.filter((s) => s.year === year && s.semester === semester)
 }
@@ -153,6 +189,7 @@ export function weeklyClassCount(section: Section): number {
 }
 
 /** The distinct subject ids taught in a section, in first-appearance order. */
+/** @deprecated use Section.subjects */
 export function subjectIdsOf(section: Section): string[] {
   const seen = new Set<string>()
   const ids: string[] = []

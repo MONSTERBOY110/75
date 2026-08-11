@@ -1,17 +1,19 @@
 import { SubjectRow } from '../components/attendance/SubjectRow'
 import { TodayPanel } from '../components/attendance/TodayPanel'
 import { Spinner } from '../components/ui/Spinner'
-import { getSubject } from '../data/subjects'
 import type { SubjectStat } from '../lib/attendance'
+import type { Subject } from '../types'
 import { useStats } from '../context/StatsContext'
 
 function SubjectGroup({
   title,
   stats,
+  subjectsById,
   className,
 }: {
   title: string
   stats: SubjectStat[]
+  subjectsById: Map<string, Subject>
   className?: string
 }) {
   if (stats.length === 0) return null
@@ -19,9 +21,11 @@ function SubjectGroup({
     <section className={className}>
       <h2 className="mb-3 font-pixel text-[11px] uppercase tracking-wider text-primary">{title}</h2>
       <div className="flex flex-col gap-3">
-        {stats.map((stat) => (
-          <SubjectRow key={stat.subjectId} stat={stat} />
-        ))}
+        {stats.map((stat) => {
+          const subject = subjectsById.get(stat.subjectId)
+          if (!subject) return null
+          return <SubjectRow key={stat.subjectId} stat={stat} subject={subject} />
+        })}
       </div>
     </section>
   )
@@ -29,11 +33,12 @@ function SubjectGroup({
 
 export default function SubjectsPage() {
   const stats = useStats()
-  const { subjectIds, bySubject, loading } = stats
+  const { subjectIds, bySubject, subjectsById, loading } = stats
 
   const all = subjectIds.map((id) => bySubject.get(id)!)
-  const theory = all.filter((s) => getSubject(s.subjectId).kind === 'theory')
-  const practical = all.filter((s) => getSubject(s.subjectId).kind === 'practical')
+  const kindOf = (id: string) => subjectsById.get(id)?.kind
+  const theory = all.filter((s) => kindOf(s.subjectId) === 'theory')
+  const practical = all.filter((s) => kindOf(s.subjectId) === 'practical')
 
   if (loading) {
     return (
@@ -57,8 +62,13 @@ export default function SubjectsPage() {
         </div>
       ) : (
         <>
-          <SubjectGroup title="Theory" stats={theory} className="mt-5" />
-          <SubjectGroup title="Practical" stats={practical} className="mt-7" />
+          <SubjectGroup title="Theory" stats={theory} subjectsById={subjectsById} className="mt-5" />
+          <SubjectGroup
+            title="Practical"
+            stats={practical}
+            subjectsById={subjectsById}
+            className="mt-7"
+          />
         </>
       )}
 

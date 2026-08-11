@@ -39,12 +39,28 @@ export interface Slot {
   batch?: string
 }
 
+export interface College {
+  id: string
+  /** Normalized display name, e.g. "ABC College of Something". */
+  name: string
+  /** Punctuation-free lowercase key used to spot duplicates. */
+  nameKey: string
+  /** True for the college shipped with the app; false for student-contributed. */
+  builtIn: boolean
+}
+
 export interface Section {
   id: string
+  collegeId: string
   year: number
   semester: number
   /** Display label, e.g. "CSE-A". */
   label: string
+  /**
+   * The papers this section is taught. Carried on the section rather than a
+   * global catalogue, because every college has its own syllabus.
+   */
+  subjects: Subject[]
   /** 'soon' sections are listed in the picker but cannot be selected. */
   status: 'available' | 'soon'
   /**
@@ -67,6 +83,8 @@ export interface UserProfile {
   photoURL?: string | null
   /** Undefined until the student picks one during setup. */
   avatarStyle?: AvatarStyle
+  /** Defaults to the built-in college for accounts created before colleges existed. */
+  collegeId?: string
   year: number
   semester: number
   sectionId: string

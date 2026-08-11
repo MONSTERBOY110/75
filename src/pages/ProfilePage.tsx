@@ -5,7 +5,9 @@ import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import { Input } from '../components/ui/Input'
 import { PixelAvatar } from '../components/ui/PixelAvatar'
 import { useAuth, useUid } from '../context/AuthContext'
-import { getSection, slotsForBatch } from '../data/routines'
+import { BUILT_IN_COLLEGE, slotsForBatch } from '../data/routines'
+import { useColleges } from '../hooks/useColleges'
+import { useStats } from '../context/StatsContext'
 import { logout } from '../services/auth'
 import { ChoiceGrid } from '../components/ui/ChoiceGrid'
 import {
@@ -32,7 +34,10 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 export default function ProfilePage() {
   const uid = useUid()
   const { user, profile } = useAuth()
-  const section = getSection(profile?.sectionId)
+  const stats = useStats()
+  const section = stats.section
+  const { colleges } = useColleges()
+  const college = colleges.find((c) => c.id === (profile?.collegeId ?? BUILT_IN_COLLEGE.id))
 
   const [editingName, setEditingName] = useState(false)
   const [draftName, setDraftName] = useState(profile?.name ?? '')
@@ -184,6 +189,14 @@ export default function ProfilePage() {
       )}
 
       <div className="mt-7 flex flex-col gap-2">
+        {college && (
+          <div className="border-2 border-outline bg-surface-container px-4 py-3">
+            <span className="font-pixel text-[8px] uppercase tracking-wider text-on-surface-variant">
+              College
+            </span>
+            <p className="mt-1 text-body-lg leading-snug text-on-surface">{college.name}</p>
+          </div>
+        )}
         <InfoRow label="Year" value={profile?.year ? `${profile.year}` : 'Not set'} />
         <InfoRow label="Semester" value={profile?.semester ? `${profile.semester}` : 'Not set'} />
         <InfoRow label="Section" value={section?.label ?? 'Not set'} />
@@ -237,6 +250,10 @@ export default function ProfilePage() {
         <LogOut className="h-4 w-4" />
         Log out
       </button>
+
+      <p className="mt-6 text-center font-pixel text-[8px] uppercase tracking-wider text-on-surface-variant">
+        75 · v{__APP_VERSION__}
+      </p>
 
       <ConfirmDialog
         open={confirmOut}

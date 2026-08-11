@@ -4,7 +4,7 @@ import { StatHero, StatTile } from '../components/attendance/StatCard'
 import { Avatar } from '../components/ui/Avatar'
 import { Spinner } from '../components/ui/Spinner'
 import { useAuth } from '../context/AuthContext'
-import { getSection } from '../data/routines'
+
 import { useStats } from '../context/StatsContext'
 import { firstName, unmarkedNote } from '../utils/advice'
 import { formatDayAndDate } from '../utils/date'
@@ -13,7 +13,7 @@ export default function HomePage() {
   const { profile } = useAuth()
   const stats = useStats()
   const { overall, theory, practical, todaySlots, todayDate, loading } = stats
-  const section = getSection(profile?.sectionId)
+  const section = stats.section
   const nudge = unmarkedNote(overall)
 
   return (

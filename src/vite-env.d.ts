@@ -14,3 +14,6 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv
 }
+
+/** Injected from package.json at build time. */
+declare const __APP_VERSION__: string

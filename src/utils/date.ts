@@ -70,6 +70,14 @@ export function minutesOfDay(time: string): number {
   return Number(h) * 60 + Number(m)
 }
 
+/** "10:00" + 100 -> "11:40". Clamped to the end of the day. */
+export function addMinutesToTime(time: string, minutes: number): string {
+  const total = Math.max(0, Math.min(23 * 60 + 59, minutesOfDay(time) + minutes))
+  const h = String(Math.floor(total / 60)).padStart(2, '0')
+  const m = String(total % 60).padStart(2, '0')
+  return `${h}:${m}`
+}
+
 /** Minutes past local midnight for a timestamp. */
 export function minutesSinceMidnight(value: number | Date): number {
   const d = new Date(value)

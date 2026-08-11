@@ -35,6 +35,20 @@ export async function signUpWithEmail(name: string, email: string, password: str
   const cred = await createUserWithEmailAndPassword(auth, email, password)
   await updateProfile(cred.user, { displayName: name })
   await ensureUserDoc({ uid: cred.user.uid, name, email: cred.user.email ?? email })
+
+  /*
+   * Creating the account flips auth state immediately, which wakes the profile
+   * listener and its backfill BEFORE `updateProfile` above has landed. The
+   * backfill then creates the document with the "Student" placeholder, so
+   * `ensureUserDoc` finds a document already there and leaves the placeholder
+   * in place. Assert the chosen name last so it always wins; later backfills
+   * see a non-empty name and leave it alone.
+   */
+  await setDoc(
+    userRef(cred.user.uid),
+    { name: name.trim() || 'Student', updatedAt: serverTimestamp() },
+    { merge: true },
+  )
 }
 
 export async function signInWithEmail(email: string, password: string): Promise<void> {

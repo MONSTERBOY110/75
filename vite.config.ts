@@ -1,13 +1,20 @@
+import { readFileSync } from 'node:fs'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
+const { version } = JSON.parse(readFileSync('./package.json', 'utf8')) as { version: string }
+
 // https://vitejs.dev/config/
 export default defineConfig({
+  // Shown on the Profile screen, so you can tell which build someone is running.
+  define: { __APP_VERSION__: JSON.stringify(version) },
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt' so a new deploy surfaces an Update button instead of reloading
+      // underneath someone who is halfway through marking their attendance.
+      registerType: 'prompt',
       includeAssets: ['favicon.svg', 'icons/apple-touch-icon.png'],
       manifest: {
         name: '75 Attendance Tracker',
@@ -44,10 +51,11 @@ export default defineConfig({
         navigateFallback: '/index.html',
         // Let Firebase Auth/Firestore network calls pass through to the network.
         navigateFallbackDenylist: [/^\/__/, /\/[^/?]+\.[^/]+$/],
-        // Take control of open clients immediately and drop old precaches so a
-        // new deploy replaces the installed PWA on next launch (no stale shell).
+        // The waiting worker must NOT skip waiting on its own, or it would
+        // activate before the student taps Update and the prompt would be
+        // pointless. Tapping Update posts SKIP_WAITING and reloads.
         clientsClaim: true,
-        skipWaiting: true,
+        skipWaiting: false,
         cleanupOutdatedCaches: true,
       },
       devOptions: {

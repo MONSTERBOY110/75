@@ -13,6 +13,7 @@ export function attendanceCollection(uid: string) {
 }
 
 export interface SetupInput {
+  collegeId: string
   year: number
   semester: number
   sectionId: string
@@ -28,6 +29,7 @@ export interface SetupInput {
 export async function completeSetup(uid: string, input: SetupInput): Promise<void> {
   // Firestore rejects `undefined`, so only send the avatar when one was picked.
   const patch: Record<string, unknown> = {
+    collegeId: input.collegeId,
     year: input.year,
     semester: input.semester,
     sectionId: input.sectionId,

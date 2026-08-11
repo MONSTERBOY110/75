@@ -1,11 +1,76 @@
 rules_version = '2';
 
-// 75 — each student may only read/write data under their own user document.
+// 75 - attendance tracker.
+//
+// Two shapes of data:
+//   users/{uid}/**            private to that student
+//   colleges/{id}/sections/** shared, readable by everyone signed in, and
+//                             writable only by whoever contributed it
+//
 // Deploy with: firebase deploy --only firestore:rules
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // A student may only read and write data under their own user document.
     match /users/{userId}/{document=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(resourceData) {
+      return signedIn() && resourceData.createdBy == request.auth.uid;
+    }
+
+    function validName() {
+      return request.resource.data.name is string
+             && request.resource.data.name.size() >= 3
+             && request.resource.data.name.size() <= 120
+             && request.resource.data.nameKey is string
+             && request.resource.data.nameKey.size() >= 3;
+    }
+
+    // Every college name lives here. Any signed-in student can read the list and
+    // add a new one; only the contributor can change or remove what they added,
+    // so nobody can vandalise another college's routine.
+    //
+    // 'tbit' is the college bundled with the app. Whoever loads the app first
+    // seeds that document, but nobody may ever edit or delete it, so its name
+    // cannot be changed out from under everyone using it.
+    match /colleges/{collegeId} {
+      allow read: if signedIn();
+
+      allow create: if signedIn()
+                    && validName()
+                    && request.resource.data.createdBy == request.auth.uid;
+
+      allow update, delete: if collegeId != 'tbit' && isOwner(resource.data);
+
+      match /sections/{sectionId} {
+        allow read: if signedIn();
+
+        allow create: if signedIn()
+                      && request.resource.data.createdBy == request.auth.uid
+                      && request.resource.data.label is string
+                      && request.resource.data.label.size() >= 1
+                      && request.resource.data.label.size() <= 40
+                      && request.resource.data.year is int
+                      && request.resource.data.year >= 1
+                      && request.resource.data.year <= 6
+                      && request.resource.data.semester is int
+                      && request.resource.data.semester >= 1
+                      && request.resource.data.semester <= 12
+                      && request.resource.data.subjects is list
+                      && request.resource.data.subjects.size() >= 1
+                      && request.resource.data.subjects.size() <= 40
+                      && request.resource.data.slots is list
+                      && request.resource.data.slots.size() >= 1
+                      && request.resource.data.slots.size() <= 80;
+
+        allow update, delete: if isOwner(resource.data);
+      }
     }
   }
 }

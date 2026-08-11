@@ -1,14 +1,13 @@
 import { Link } from 'react-router-dom'
 import { ChevronRight } from 'lucide-react'
 import { band, type SubjectStat } from '../../lib/attendance'
-import { getSubject } from '../../data/subjects'
+import type { Subject } from '../../types'
 import { BAND_TEXT } from '../../utils/band'
 import { cn } from '../../utils/cn'
 import { PixelBar } from './PixelBar'
 
 /** One subject "tab": name and code on the left, X of Y on the right. */
-export function SubjectRow({ stat }: { stat: SubjectStat }) {
-  const subject = getSubject(stat.subjectId)
+export function SubjectRow({ stat, subject }: { stat: SubjectStat; subject: Subject }) {
   const b = band(stat.percent, stat.held)
 
   return (
