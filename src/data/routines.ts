@@ -35,14 +35,14 @@ const CSE_A_SLOTS: Slot[] = [
   { id: 'tue-1400', day: 2, start: '14:00', end: '15:40', subjectId: 'pcc-cs502' },
 
   // Wednesday - SE Lab 6 (batch 1) alongside OS Lab 1 (batch 2)
-  { id: 'wed-1000', day: 3, start: '10:00', end: '11:40', subjectId: 'esc501' },
+  { id: 'wed-1000', day: 3, start: '10:00', end: '11:40', subjectId: 'pec-it501b' },
   { id: 'wed-1140', day: 3, start: '11:40', end: '13:20', subjectId: 'pcc-cs503' },
   { id: 'a-wed-1400-selab', day: 3, start: '14:00', end: '16:30', subjectId: 'esc591', batch: '1' },
   { id: 'wed-1400', day: 3, start: '14:00', end: '16:30', subjectId: 'pcc-cs592', batch: '2' },
 
   // Thursday - OS Lab 1 (batch 1) alongside OOP Lab 5 (batch 2)
   { id: 'thu-1000', day: 4, start: '10:00', end: '11:40', subjectId: 'pcc-cs503' },
-  { id: 'thu-1140', day: 4, start: '11:40', end: '13:20', subjectId: 'pec-it501b' },
+  { id: 'thu-1140', day: 4, start: '11:40', end: '13:20', subjectId: 'esc501' },
   { id: 'a-thu-1400-oslab', day: 4, start: '14:00', end: '16:30', subjectId: 'pcc-cs592', batch: '1' },
   { id: 'thu-1400', day: 4, start: '14:00', end: '16:30', subjectId: 'pcc-cs593', batch: '2' },
 

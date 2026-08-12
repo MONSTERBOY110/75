@@ -5,6 +5,7 @@ import { UpdatePrompt } from './components/layout/UpdatePrompt'
 import { StatsProvider } from './context/StatsContext'
 import AddCollegePage from './pages/AddCollegePage'
 import HomePage from './pages/HomePage'
+import LeaderboardPage from './pages/LeaderboardPage'
 import ProfilePage from './pages/ProfilePage'
 import SetupPage from './pages/SetupPage'
 import SignInPage from './pages/SignInPage'
@@ -38,10 +39,13 @@ function AppRoutes() {
         <Route element={<SetupGate />}>
           <Route path="/setup" element={<SetupPage />} />
           <Route path="/add-college" element={<AddCollegePage />} />
+          {/* Changing an existing routine reuses the setup screen. */}
+          <Route path="/routine" element={<SetupPage />} />
           {/* One attendance listener, shared by every screen below. */}
           <Route element={<StatsProvider />}>
-            {/* Subject detail is full-screen with its own back header. */}
+            {/* Full-screen screens: own back header, no bottom nav. */}
             <Route path="/subjects/:subjectId" element={<SubjectDetailPage />} />
+            <Route path="/leaderboard" element={<LeaderboardPage />} />
             <Route element={<AppLayout />}>
               <Route path="/home" element={<HomePage />} />
               <Route path="/subjects" element={<SubjectsPage />} />

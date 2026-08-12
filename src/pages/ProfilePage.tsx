@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Check, LogOut, Pencil, X } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Check, ChevronRight, LogOut, Pencil, Replace, X } from 'lucide-react'
 import { Avatar } from '../components/ui/Avatar'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import { Input } from '../components/ui/Input'
@@ -44,9 +45,14 @@ export default function ProfilePage() {
   const [savingName, setSavingName] = useState(false)
   const [confirmOut, setConfirmOut] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
+  // The date the student picked, held back until they confirm the recalculation.
+  const [pendingStart, setPendingStart] = useState<number | null>(null)
+  const [savingStart, setSavingStart] = useState(false)
   const [error, setError] = useState('')
 
   const hasPhoto = Boolean(profile?.photoURL)
+  // Bundled routines carry no createdBy, so they are never editable here.
+  const canEditRoutine = Boolean(section?.createdBy && section.createdBy === uid)
 
   async function saveName() {
     if (!draftName.trim()) return
@@ -80,14 +86,22 @@ export default function ProfilePage() {
     }
   }
 
-  async function changeStart(key: string) {
-    const ms = fromDateKey(key)
-    if (!Number.isFinite(ms)) return
+  /**
+   * Applies the date the student confirmed. Changing it recomputes every
+   * subject's total, so the write only happens from the dialog.
+   */
+  async function applyStart() {
+    if (pendingStart === null) return
+    setSavingStart(true)
     setError('')
     try {
-      await updateSemesterStart(uid, ms)
+      await updateSemesterStart(uid, pendingStart)
+      setPendingStart(null)
     } catch {
       setError('Could not update the semester start date.')
+      setPendingStart(null)
+    } finally {
+      setSavingStart(false)
     }
   }
 
@@ -230,14 +244,56 @@ export default function ProfilePage() {
           type="date"
           className="input"
           max={toDateKey(Date.now())}
-          value={profile?.semesterStartDate ? toDateKey(profile.semesterStartDate) : ''}
-          onChange={(e) => void changeStart(e.target.value)}
+          value={
+            pendingStart !== null
+              ? toDateKey(pendingStart)
+              : profile?.semesterStartDate
+                ? toDateKey(profile.semesterStartDate)
+                : ''
+          }
+          onChange={(e) => {
+            const ms = fromDateKey(e.target.value)
+            if (Number.isFinite(ms)) setPendingStart(ms)
+          }}
         />
         {profile?.semesterStartDate && (
           <p className="mt-2 text-body-sm text-on-surface-variant">
             Counting classes from {formatDate(profile.semesterStartDate)}.
           </p>
         )}
+      </div>
+
+      <div className="mt-7">
+        <span className="field-label">Routine</span>
+        <div className="flex flex-col gap-2">
+          <Link
+            to="/routine"
+            className="press flex min-h-14 items-center justify-between gap-3 border-2 border-outline bg-surface-container-high px-4"
+            style={{ boxShadow: '4px 4px 0 0 #000' }}
+          >
+            <span className="flex items-center gap-2 font-pixel text-[10px] uppercase tracking-wider text-on-surface">
+              <Replace className="h-4 w-4 text-primary" />
+              Change section
+            </span>
+            <ChevronRight className="h-5 w-5 shrink-0 text-primary" />
+          </Link>
+
+          {/* Only the student who contributed a routine may correct it, which is
+              also what the security rules enforce. */}
+          {canEditRoutine && (
+            <Link
+              to={`/add-college?college=${profile?.collegeId ?? ''}&section=${section?.id ?? ''}`}
+              className="press flex min-h-14 items-center justify-between gap-3 border-2 border-outline bg-surface-container-high px-4"
+              style={{ boxShadow: '4px 4px 0 0 #000' }}
+            >
+              <span className="flex items-center gap-2 font-pixel text-[10px] uppercase tracking-wider text-on-surface">
+                <Pencil className="h-4 w-4 text-primary" />
+                Edit this routine
+              </span>
+              <ChevronRight className="h-5 w-5 shrink-0 text-primary" />
+            </Link>
+          )}
+        </div>
       </div>
 
       {error && <p className="mt-4 text-body-sm text-error">{error}</p>}
@@ -254,6 +310,20 @@ export default function ProfilePage() {
       <p className="mt-6 text-center font-pixel text-[8px] uppercase tracking-wider text-on-surface-variant">
         75 · v{__APP_VERSION__}
       </p>
+
+      <ConfirmDialog
+        open={pendingStart !== null}
+        title="Change semester start date?"
+        message={
+          pendingStart === null
+            ? ''
+            : `Every subject's total will be recalculated from ${formatDate(pendingStart)}. Your marks are kept.`
+        }
+        confirmLabel="Recalculate"
+        busy={savingStart}
+        onCancel={() => setPendingStart(null)}
+        onConfirm={() => void applyStart()}
+      />
 
       <ConfirmDialog
         open={confirmOut}

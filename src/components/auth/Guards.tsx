@@ -28,13 +28,16 @@ export function SetupGate() {
     profile?.setupCompleted === true &&
     !(isBuiltInCollege(profile.collegeId) && needsBatch(getSection(profile.sectionId), profile.batch))
 
-  // Adding a college is part of setting up: it hands the new routine straight
-  // back to /setup with it selected. Once setup is done there is no way to
-  // switch section, so keep both screens to the setup phase and avoid a dead end.
-  const inSetupFlow = location.pathname === '/setup' || location.pathname === '/add-college'
+  const path = location.pathname
+  // Building or editing a routine is reachable in both states: during setup it
+  // hands the new routine back to /setup, and afterwards it is how a student
+  // corrects one. /setup itself stays first-run only, since /routine covers
+  // changing section later.
+  const inSetupFlow = path === '/setup' || path === '/add-college' || path === '/routine'
 
   if (!setupDone && !inSetupFlow) return <Navigate to="/setup" replace />
-  if (setupDone && inSetupFlow) return <Navigate to="/home" replace />
+  // Finishing setup lands on Home. Changing routine later happens at /routine.
+  if (setupDone && path === '/setup') return <Navigate to="/home" replace />
   return <Outlet />
 }
 

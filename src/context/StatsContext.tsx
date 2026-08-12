@@ -1,6 +1,7 @@
 import { createContext, useContext } from 'react'
 import { Outlet } from 'react-router-dom'
 import { useComputeStats, type Stats } from '../hooks/useStats'
+import { usePublishStanding } from '../hooks/usePublishStanding'
 
 const StatsContext = createContext<Stats | undefined>(undefined)
 
@@ -13,6 +14,9 @@ const StatsContext = createContext<Stats | undefined>(undefined)
  */
 export function StatsProvider() {
   const stats = useComputeStats()
+  // Publish the student's own leaderboard row from here, the one place that
+  // already holds their computed numbers.
+  usePublishStanding(stats.section, stats.overall)
   return (
     <StatsContext.Provider value={stats}>
       <Outlet />

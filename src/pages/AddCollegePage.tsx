@@ -1,12 +1,12 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Plus, Trash2 } from 'lucide-react'
+import { AlertTriangle, Plus, Trash2 } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { ChoiceGrid } from '../components/ui/ChoiceGrid'
 import { Input } from '../components/ui/Input'
 import { ScreenHeader } from '../components/ui/ScreenHeader'
 import { useUid } from '../context/AuthContext'
-import { useColleges } from '../hooks/useColleges'
+import { useColleges, useCollegeSections } from '../hooks/useColleges'
 import {
   draftToSection,
   slotIdFor,
@@ -15,7 +15,7 @@ import {
   type DraftSlot,
   type DraftSubject,
 } from '../lib/routineDraft'
-import { addSectionToCollege, createCollegeWithSection } from '../services/colleges'
+import { addSectionToCollege, createCollegeWithSection, updateSection } from '../services/colleges'
 import type { SubjectKind } from '../types'
 import { cn } from '../utils/cn'
 import { normalizeCollegeName } from '../utils/collegeName'
@@ -36,6 +36,12 @@ export default function AddCollegePage() {
   const existingCollege = colleges.find((c) => c.id === existingCollegeId)
   const sectionOnly = Boolean(existingCollegeId)
 
+  // ?section=<id> as well means we are editing a routine this student added.
+  const editingSectionId = params.get('section') ?? ''
+  const editing = Boolean(existingCollegeId && editingSectionId)
+  const { sections } = useCollegeSections(editing ? existingCollegeId : undefined)
+  const editingSection = sections.find((s) => s.id === editingSectionId)
+
   const [collegeName, setCollegeName] = useState('')
   const [label, setLabel] = useState('')
   const [year, setYear] = useState(3)
@@ -55,6 +61,33 @@ export default function AddCollegePage() {
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
   const [showErrors, setShowErrors] = useState(false)
+  const [prefilled, setPrefilled] = useState(false)
+
+  // Load the routine being edited into the form, once.
+  useEffect(() => {
+    if (!editing || prefilled || !editingSection) return
+    setPrefilled(true)
+    setLabel(editingSection.label)
+    setYear(editingSection.year)
+    setSemester(editingSection.semester)
+    setSubjects(
+      editingSection.subjects.map((s) => ({
+        id: s.id,
+        name: s.name,
+        code: s.code === s.name ? '' : s.code,
+        kind: s.kind,
+      })),
+    )
+    setSlots(
+      editingSection.slots.map((s) => ({
+        id: s.id,
+        day: s.day,
+        start: s.start,
+        end: s.end,
+        subjectId: s.subjectId,
+      })),
+    )
+  }, [editing, prefilled, editingSection])
 
   // In section-only mode the existing college's stored name is authoritative.
   const preview = sectionOnly
@@ -128,6 +161,12 @@ export default function AddCollegePage() {
       const { subjects: outSubjects, slots: outSlots } = draftToSection(draft)
       const input = { label, year, semester, subjects: outSubjects, slots: outSlots }
 
+      if (editing) {
+        await updateSection(existingCollegeId, editingSectionId, input)
+        navigate('/profile', { replace: true })
+        return
+      }
+
       const result = sectionOnly
         ? {
             collegeId: existingCollegeId,
@@ -148,15 +187,27 @@ export default function AddCollegePage() {
   return (
     <div className="app-shell px-margin pb-10 pt-3">
       <ScreenHeader
-        title={sectionOnly ? 'Add section' : 'Add college'}
-        onBack={() => navigate('/setup')}
+        title={editing ? 'Edit routine' : sectionOnly ? 'Add section' : 'Add college'}
+        onBack={() => navigate(editing ? '/profile' : '/setup')}
       />
 
       <p className="mt-4 text-body-lg text-on-surface-variant">
-        {sectionOnly
-          ? 'Add your section once and everyone in it can use it.'
-          : 'Add your college once and everyone there can use it.'}
+        {editing
+          ? 'Correct the classes below.'
+          : sectionOnly
+            ? 'Add your section once and everyone in it can use it.'
+            : 'Add your college once and everyone there can use it.'}
       </p>
+
+      {editing && (
+        <div className="mt-5 flex items-start gap-2 border-2 border-warning/40 bg-warning/10 px-4 py-3">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+          <p className="text-body-sm text-warning">
+            This routine is shared, so your changes apply to everyone in this section. Removing a
+            period stops its past marks counting.
+          </p>
+        </div>
+      )}
 
       {/* 1. College name */}
       <section className="mt-7">
@@ -429,7 +480,7 @@ export default function AddCollegePage() {
 
       <div className="sticky bottom-0 mt-7 bg-background pb-2 pt-3">
         <Button type="button" onClick={() => void save()} loading={saving}>
-          {sectionOnly ? 'Save section' : 'Save college'}
+          {editing ? 'Save changes' : sectionOnly ? 'Save section' : 'Save college'}
         </Button>
       </div>
     </div>

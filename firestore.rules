@@ -48,6 +48,33 @@ service cloud.firestore {
 
       allow update, delete: if collegeId != 'tbit' && isOwner(resource.data);
 
+      // Leaderboard rows: a small public projection of each student's own
+      // standing, so a board can be built without opening up users/{uid}.
+      // The document id IS the student's uid, which is what makes it impossible
+      // to write somebody else's number.
+      match /members/{memberId} {
+        allow read: if signedIn();
+
+        allow create, update: if signedIn()
+                              && memberId == request.auth.uid
+                              && request.resource.data.uid == request.auth.uid
+                              && request.resource.data.name is string
+                              && request.resource.data.name.size() >= 1
+                              && request.resource.data.name.size() <= 60
+                              && request.resource.data.sectionLabel is string
+                              && request.resource.data.sectionLabel.size() <= 40
+                              && request.resource.data.percent is number
+                              && request.resource.data.percent >= 0
+                              && request.resource.data.percent <= 100
+                              && request.resource.data.attended is int
+                              && request.resource.data.attended >= 0
+                              && request.resource.data.held is int
+                              && request.resource.data.held >= 0
+                              && request.resource.data.attended <= request.resource.data.held;
+
+        allow delete: if signedIn() && memberId == request.auth.uid;
+      }
+
       match /sections/{sectionId} {
         allow read: if signedIn();
 

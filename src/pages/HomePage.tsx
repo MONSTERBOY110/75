@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom'
-import { AlertTriangle, ChevronRight } from 'lucide-react'
+import { AlertTriangle, ChevronRight, Trophy } from 'lucide-react'
 import { StatHero, StatTile } from '../components/attendance/StatCard'
 import { Avatar } from '../components/ui/Avatar'
 import { Spinner } from '../components/ui/Spinner'
 import { useAuth } from '../context/AuthContext'
 
 import { useStats } from '../context/StatsContext'
+import { useLeaderboard } from '../hooks/useLeaderboard'
+import { ordinal } from '../lib/leaderboard'
 import { firstName, unmarkedNote } from '../utils/advice'
 import { formatDayAndDate } from '../utils/date'
 
@@ -15,6 +17,7 @@ export default function HomePage() {
   const { overall, theory, practical, todaySlots, todayDate, loading } = stats
   const section = stats.section
   const nudge = unmarkedNote(overall)
+  const { board } = useLeaderboard()
 
   return (
     <div>
@@ -58,6 +61,25 @@ export default function HomePage() {
               <p className="text-body-sm text-warning">{nudge}</p>
             </div>
           )}
+
+          <Link
+            to="/leaderboard"
+            className="press mt-4 flex items-center justify-between gap-3 border-2 border-outline bg-surface-container p-4"
+            style={{ boxShadow: '4px 4px 0 0 #000' }}
+          >
+            <Trophy className="h-5 w-5 shrink-0 text-primary" />
+            <div className="min-w-0 flex-1">
+              <p className="font-pixel text-[9px] uppercase tracking-wider text-primary">
+                Leaderboard
+              </p>
+              <p className="mt-1 text-body-lg text-on-surface">
+                {board.me
+                  ? `You are ${ordinal(board.me.rank)} of ${board.total}`
+                  : 'See how your college is doing'}
+              </p>
+            </div>
+            <ChevronRight className="h-5 w-5 shrink-0 text-primary" />
+          </Link>
 
           <Link
             to="/subjects"

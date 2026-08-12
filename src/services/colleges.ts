@@ -133,11 +133,35 @@ export async function addSectionToCollege(
   return section.id
 }
 
+/**
+ * Replaces a contributed routine in place, keeping its id so everyone using the
+ * section follows the edit. The rules only let the original contributor do this.
+ */
+export async function updateSection(
+  collegeId: string,
+  sectionId: string,
+  input: NewSectionInput,
+): Promise<void> {
+  await setDoc(
+    sectionDoc(collegeId, sectionId),
+    {
+      label: input.label.trim(),
+      year: input.year,
+      semester: input.semester,
+      subjects: input.subjects,
+      slots: cleanSlots(input.slots),
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true },
+  )
+}
+
 /** Shapes a Firestore section document into the app's Section type. */
 export function toSection(collegeId: string, id: string, data: Record<string, unknown>): Section {
   return {
     id,
     collegeId,
+    ...(typeof data.createdBy === 'string' ? { createdBy: data.createdBy } : {}),
     label: (data.label as string) ?? 'Section',
     year: Number(data.year) || 0,
     semester: Number(data.semester) || 0,

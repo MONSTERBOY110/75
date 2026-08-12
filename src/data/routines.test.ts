@@ -158,6 +158,26 @@ describe.each([
   })
 })
 
+describe('CSE-A theory slots', () => {
+  const section = getSection('y3s5-cse-a')!
+  const slotFor = (id: string) => section.slots.find((s) => s.id === id)
+
+  // Corrected in v1.2: the two were the wrong way round. The slot ids are
+  // deliberately unchanged so attendance already marked against them follows
+  // the correction rather than being orphaned.
+  it('teaches AI on Wednesday morning and SE on Thursday late morning', () => {
+    expect(slotFor('wed-1000')).toMatchObject({ day: 3, start: '10:00', subjectId: 'pec-it501b' })
+    expect(slotFor('thu-1140')).toMatchObject({ day: 4, start: '11:40', subjectId: 'esc501' })
+  })
+
+  it('leaves the rest of the theory week alone', () => {
+    expect(slotFor('wed-1140')).toMatchObject({ subjectId: 'pcc-cs503' })
+    expect(slotFor('thu-1000')).toMatchObject({ subjectId: 'pcc-cs503' })
+    expect(slotFor('fri-1000')).toMatchObject({ subjectId: 'esc501' })
+    expect(slotFor('mon-1140')).toMatchObject({ subjectId: 'pec-it501b' })
+  })
+})
+
 describe('CSE-A batch 2 keeps its original slot ids', () => {
   const section = getSection('y3s5-cse-a')!
 

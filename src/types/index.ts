@@ -63,6 +63,8 @@ export interface Section {
   subjects: Subject[]
   /** 'soon' sections are listed in the picker but cannot be selected. */
   status: 'available' | 'soon'
+  /** The student who contributed it. Absent on the bundled routines, which nobody may edit. */
+  createdBy?: string
   /**
    * Present when the section splits for labs. Students pick one during setup
    * and only ever see slots tagged with it (plus every untagged slot).
@@ -94,6 +96,25 @@ export interface UserProfile {
   semesterStartDate: number
   setupCompleted: boolean
   createdAt: Timestamp | null
+  updatedAt: Timestamp | null
+}
+
+/**
+ * colleges/{collegeId}/members/{uid}
+ *
+ * The public projection of one student's standing, so a leaderboard can be built
+ * without opening up `users/{uid}`. Each student writes only their own.
+ */
+export interface Standing {
+  uid: string
+  name: string
+  photoURL?: string | null
+  avatarStyle?: AvatarStyle
+  sectionLabel: string
+  /** 0-100, their overall attendance. */
+  percent: number
+  attended: number
+  held: number
   updatedAt: Timestamp | null
 }
 

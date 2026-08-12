@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Plus } from 'lucide-react'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { AlertTriangle, Plus } from 'lucide-react'
 
 import { Button } from '../components/ui/Button'
 import { CollegeSelect } from '../components/ui/CollegeSelect'
 import { ChoiceGrid } from '../components/ui/ChoiceGrid'
 import { Input } from '../components/ui/Input'
 import { PixelAvatar } from '../components/ui/PixelAvatar'
+import { ScreenHeader } from '../components/ui/ScreenHeader'
 import { Spinner } from '../components/ui/Spinner'
 import { useAuth, useUid } from '../context/AuthContext'
 import { weeklyClassCount } from '../data/routines'
@@ -20,8 +21,12 @@ export default function SetupPage() {
   const uid = useUid()
   const { profile } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [params] = useSearchParams()
   const hasPhoto = Boolean(profile?.photoURL)
+
+  // The same screen serves first-run setup and changing routine later.
+  const changing = location.pathname === '/routine'
 
   const { colleges, loading: collegesLoading } = useColleges()
 
@@ -80,7 +85,9 @@ export default function SetupPage() {
         semesterStartDate: startMs,
         avatarStyle: avatarStyle || undefined,
       })
-      // The setup gate routes to /home once the profile snapshot lands.
+      // On first run the setup gate routes to /home once the profile lands; when
+      // changing routine the gate would leave us here, so go back deliberately.
+      if (changing) navigate('/profile', { replace: true })
     } catch {
       setError('Could not save your details. Please try again.')
       setLoading(false)
@@ -88,11 +95,27 @@ export default function SetupPage() {
   }
 
   return (
-    <div className="app-shell px-margin pb-10 pt-8">
-      <h1 className="wordmark text-[20px]">Your routine</h1>
+    <div className="app-shell px-margin pb-10 pt-3">
+      {changing ? (
+        <ScreenHeader title="Change routine" onBack={() => navigate('/profile')} />
+      ) : (
+        <div className="pt-5" />
+      )}
+
+      <h1 className="wordmark mt-2 text-[20px]">Your routine</h1>
       <p className="mt-3 text-body-lg text-on-surface-variant">
         We use this to work out how many classes have been held so far.
       </p>
+
+      {changing && (
+        <div className="mt-5 flex items-start gap-2 border-2 border-warning/40 bg-warning/10 px-4 py-3">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+          <p className="text-body-sm text-warning">
+            Marks you made against your current section's classes stop counting if you switch. They
+            are not deleted, so switching back brings them straight back.
+          </p>
+        </div>
+      )}
 
       <form onSubmit={onSubmit} className="mt-8 flex flex-col gap-6">
         <div>
@@ -248,7 +271,7 @@ export default function SetupPage() {
         {error && <p className="text-body-sm text-error">{error}</p>}
 
         <Button type="submit" loading={loading} disabled={!canSubmit}>
-          Start tracking
+          {changing ? 'Save routine' : 'Start tracking'}
         </Button>
       </form>
     </div>
