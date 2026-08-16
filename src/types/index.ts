@@ -128,6 +128,14 @@ export interface AttendanceRecord {
   slotId: string
   subjectId: string
   status: AttendanceStatus
+  /**
+   * A substitution or extra class that the routine never scheduled. These carry
+   * their own occurrence, so the record itself is what makes the class count.
+   */
+  extra?: boolean
+  /** Only stored for extra classes, which have no slot to read a time from. */
+  start?: string
+  end?: string
   createdAt: Timestamp | null
   updatedAt: Timestamp | null
 }

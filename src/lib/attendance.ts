@@ -18,6 +18,8 @@ export interface Occurrence {
   subjectId: string
   start: string
   end: string
+  /** True for a substitution or extra class the routine never scheduled. */
+  extra?: boolean
 }
 
 export interface Totals {
@@ -63,6 +65,58 @@ const EMPTY_TOTALS: Totals = {
 /** The Firestore document id for a mark. Deterministic, so writes are idempotent. */
 export function recordKey(dateKey: string, slotId: string): string {
   return `${dateKey}__${slotId}`
+}
+
+/** Marks a slot id as belonging to an extra class rather than the routine. */
+export const EXTRA_SLOT_PREFIX = 'x-'
+
+export function isExtraSlotId(slotId: string): boolean {
+  return slotId.startsWith(EXTRA_SLOT_PREFIX)
+}
+
+/**
+ * A slot id for a substitution class. Unique within its date, so a subject can
+ * be taught twice in one day without the second write overwriting the first.
+ */
+export function extraSlotId(subjectId: string, takenSlotIds: Iterable<string>): string {
+  const base = `${EXTRA_SLOT_PREFIX}${subjectId}`
+  const used = new Set(takenSlotIds)
+  if (!used.has(base)) return base
+  for (let i = 2; ; i++) {
+    const candidate = `${base}-${i}`
+    if (!used.has(candidate)) return candidate
+  }
+}
+
+/**
+ * Occurrences for substitution classes, built from the marks themselves.
+ *
+ * The routine cannot produce these, so the record is the source of truth: adding
+ * one adds a class to the total, and deleting it takes the class away again.
+ * Bounded by the same window as the routine, so a mistyped date far in the past
+ * or future cannot quietly skew the totals.
+ */
+export function extraOccurrences(
+  records: AttendanceRecord[],
+  semesterStartMs: number,
+  nowMs: number,
+): Occurrence[] {
+  if (!Number.isFinite(semesterStartMs) || !Number.isFinite(nowMs)) return []
+  const from = startOfDay(semesterStartMs)
+  const to = startOfDay(nowMs)
+
+  return records
+    .filter((r) => r.extra && r.date >= from && r.date <= to)
+    .map((r) => ({
+      dateKey: r.dateKey,
+      date: r.date,
+      slotId: r.slotId,
+      subjectId: r.subjectId,
+      start: r.start ?? '',
+      end: r.end ?? '',
+      extra: true,
+    }))
+    .sort((a, b) => a.date - b.date || a.start.localeCompare(b.start))
 }
 
 /**

@@ -10,6 +10,13 @@ export interface MarkInput {
   slotId: string
   subjectId: string
   status: AttendanceStatus
+  /**
+   * A substitution or extra class the routine never scheduled. These records
+   * create their own class, so they also carry the time to show it at.
+   */
+  extra?: boolean
+  start?: string
+  end?: string
 }
 
 function markRef(uid: string, dateKey: string, slotId: string) {
@@ -31,6 +38,8 @@ export async function markAttendance(uid: string, input: MarkInput): Promise<voi
       slotId: input.slotId,
       subjectId: input.subjectId,
       status: input.status,
+      // Firestore rejects undefined, so only send these for an extra class.
+      ...(input.extra ? { extra: true, start: input.start ?? '', end: input.end ?? '' } : {}),
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     },

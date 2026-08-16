@@ -56,6 +56,9 @@ There is no iOS equivalent. Apple only allows web apps on the home screen throug
 - **X is what you mark.** Present / Absent / No class, per class, from the Subjects screen.
 - Home shows **overall, theory and practical** percentages. The bottom-nav dial always shows the overall number.
 - Each subject has a **dated history** you can correct, plus a `+` that back-fills any day you forgot.
+- **Substitution classes.** If a subject ran on a day the routine never scheduled it, add it from that
+  same `+` as an extra class. Those records carry their own occurrence, so adding one adds a class to
+  the subject's total and deleting it takes the class away. They are flagged `EXTRA` in the history.
 - Colour bands: **≥75% blue**, 65-74% amber, **<65% red**.
 
 ## Setup

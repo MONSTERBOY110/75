@@ -114,6 +114,11 @@ export default function SubjectDetailPage() {
                           date: entry.date,
                           slotId: entry.slotId,
                           subjectId: entry.subjectId,
+                          // Carried explicitly so re-marking a substitution from
+                          // here cannot strip what makes it a class.
+                          ...(entry.extra
+                            ? { extra: true, start: entry.start, end: entry.end }
+                            : {}),
                         },
                         status,
                       )

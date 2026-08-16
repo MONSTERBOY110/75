@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import { slotsForBatch } from '../data/routines'
 import {
   aggregate,
+  extraOccurrences,
   listOccurrences,
   statsFor,
   type Occurrence,
@@ -77,7 +78,15 @@ export function useComputeStats(): Stats {
     // Only the classes this student actually attends: for a section that splits
     // for labs, their batch's slots plus everything shared.
     const slots = slotsForBatch(section, batch)
-    const occurrences = section && semesterStart ? listOccurrences(slots, semesterStart, now) : []
+    // Substitution classes are not in the routine, so they bring their own
+    // occurrence: adding one adds a class, deleting it takes the class away.
+    const occurrences =
+      section && semesterStart
+        ? [
+            ...listOccurrences(slots, semesterStart, now),
+            ...extraOccurrences(records, semesterStart, now),
+          ]
+        : []
 
     // Subjects come from the section, because every college has its own syllabus.
     const subjectsById = new Map<string, Subject>()

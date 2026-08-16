@@ -32,6 +32,26 @@ export function useMarking() {
     [uid],
   )
 
+  /**
+   * Deletes a mark outright. For a substitution class this removes the class
+   * itself, because an extra record is the only thing that puts it on the
+   * calendar.
+   */
+  const remove = useCallback(
+    async (dateKey: string, slotId: string) => {
+      setBusyKey(recordKey(dateKey, slotId))
+      setError('')
+      try {
+        await clearMark(uid, dateKey, slotId)
+      } catch {
+        setError('Could not remove that. Check your connection and try again.')
+      } finally {
+        setBusyKey(null)
+      }
+    },
+    [uid],
+  )
+
   const markAllNotHeld = useCallback(
     async (targets: MarkTarget[]) => {
       setBusyKey('__day__')
@@ -47,5 +67,5 @@ export function useMarking() {
     [uid],
   )
 
-  return { mark, markAllNotHeld, busyKey, error }
+  return { mark, remove, markAllNotHeld, busyKey, error }
 }

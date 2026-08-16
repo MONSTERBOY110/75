@@ -5,6 +5,9 @@ import {
   band,
   buildLog,
   listOccurrences,
+  extraOccurrences,
+  extraSlotId,
+  isExtraSlotId,
   recordKey,
   statsFor,
   TARGET,
@@ -206,6 +209,92 @@ describe('band', () => {
     expect(band(65, 10)).toBe('warn')
     expect(band(64.9, 10)).toBe('danger')
     expect(band(0, 0)).toBe('empty')
+  })
+})
+
+describe('extra / substitution classes', () => {
+  /** An extra class carries its own occurrence, so the record makes the class. */
+  function extra(dayOffset: number, subjectId: string, status: AttendanceStatus, slot = 'x-math') {
+    return { ...rec(dayOffset, slot, subjectId, status), extra: true, start: '09:00', end: '10:00' }
+  }
+
+  it('adds a class the routine never scheduled', () => {
+    // Tuesday has no classes in this routine at all.
+    const occ = listOccurrences(SLOTS, START, at(1, 23))
+    expect(occ.filter((o) => o.date === at(1, 0))).toHaveLength(0)
+
+    const extras = extraOccurrences([extra(1, 'math', 'attended')], START, at(1, 23))
+    expect(extras).toHaveLength(1)
+    expect(extras[0]).toMatchObject({ subjectId: 'math', extra: true, slotId: 'x-math' })
+  })
+
+  it('counts towards the subject once merged with the routine', () => {
+    const occ = listOccurrences(SLOTS, START, at(2, 23)) // math: Mon + Wed
+    const records = [extra(1, 'math', 'attended')]
+    const merged = [...occ, ...extraOccurrences(records, START, at(2, 23))]
+
+    const stat = statsFor(merged, records).get('math')!
+    expect(stat).toMatchObject({ scheduled: 3, held: 3, attended: 1, unmarked: 2 })
+  })
+
+  it('lets an extra class be marked absent', () => {
+    const records = [extra(1, 'math', 'absent')]
+    const stat = statsFor(extraOccurrences(records, START, at(1, 23)), records).get('math')!
+    expect(stat).toMatchObject({ held: 1, attended: 0, absent: 1, percent: 0 })
+  })
+
+  it('drops out of the totals entirely when the record is deleted', () => {
+    expect(extraOccurrences([], START, at(5, 23))).toEqual([])
+  })
+
+  it('ignores extras outside the semester window', () => {
+    // Before the semester started, and dated in the future.
+    const before = { ...extra(0, 'math', 'attended'), date: at(-10, 0), dateKey: '2026-07-24' }
+    const future = { ...extra(0, 'math', 'attended'), date: at(30, 0), dateKey: '2026-09-02' }
+    expect(extraOccurrences([before, future], START, at(2, 23))).toEqual([])
+  })
+
+  it('leaves ordinary marks alone', () => {
+    expect(extraOccurrences([rec(0, 'mon-1000', 'math', 'attended')], START, at(2, 23))).toEqual([])
+  })
+
+  it('allows two substitutions of one subject on the same day', () => {
+    const first = extraSlotId('math', [])
+    const second = extraSlotId('math', [first])
+    expect(first).toBe('x-math')
+    expect(second).toBe('x-math-2')
+
+    const records = [extra(1, 'math', 'attended', first), extra(1, 'math', 'absent', second)]
+    const stat = statsFor(extraOccurrences(records, START, at(1, 23)), records).get('math')!
+    expect(stat).toMatchObject({ held: 2, attended: 1, absent: 1 })
+  })
+
+  it('recognises its own slot ids', () => {
+    expect(isExtraSlotId('x-math')).toBe(true)
+    expect(isExtraSlotId('mon-1000')).toBe(false)
+  })
+
+  it('never collides with a routine slot on the same day', () => {
+    // The routine already teaches math on Monday; an extra that day must not
+    // overwrite the scheduled mark.
+    const scheduled = rec(0, 'mon-1000', 'math', 'attended')
+    const id = extraSlotId('math', [scheduled.slotId])
+    expect(id).not.toBe('mon-1000')
+
+    const records = [scheduled, extra(0, 'math', 'absent', id)]
+    const merged = [
+      ...listOccurrences(SLOTS, START, at(0, 23)),
+      ...extraOccurrences(records, START, at(0, 23)),
+    ]
+    const stat = statsFor(merged, records).get('math')!
+    expect(stat).toMatchObject({ scheduled: 2, held: 2, attended: 1, absent: 1, percent: 50 })
+  })
+
+  it('shows up in the history log flagged as extra', () => {
+    const records = [extra(1, 'math', 'attended')]
+    const log = buildLog(extraOccurrences(records, START, at(1, 23)), records)
+    expect(log).toHaveLength(1)
+    expect(log[0]).toMatchObject({ status: 'attended', extra: true, start: '09:00' })
   })
 })
 

@@ -38,7 +38,10 @@ export function LogRow({
         <div className="min-w-0">
           <p className="text-body-lg text-on-surface">{formatDate(entry.date)}</p>
           <p className="mt-0.5 font-pixel text-[8px] uppercase tracking-wider text-on-surface-variant">
-            {WEEKDAY_LABELS[isoWeekday(entry.date) - 1]} · {formatTime(entry.start)}
+            {WEEKDAY_LABELS[isoWeekday(entry.date) - 1]}
+            {entry.start ? ` · ${formatTime(entry.start)}` : ''}
+            {/* A substitution the routine never scheduled. */}
+            {entry.extra ? ' · EXTRA' : ''}
           </p>
         </div>
         <span className={cn('chip shrink-0', chip.className)}>{chip.label}</span>
