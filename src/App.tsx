@@ -4,6 +4,7 @@ import { AppLayout } from './components/layout/AppLayout'
 import { UpdatePrompt } from './components/layout/UpdatePrompt'
 import { StatsProvider } from './context/StatsContext'
 import AddCollegePage from './pages/AddCollegePage'
+import CalendarPage from './pages/CalendarPage'
 import HomePage from './pages/HomePage'
 import LeaderboardPage from './pages/LeaderboardPage'
 import ProfilePage from './pages/ProfilePage'
@@ -46,6 +47,7 @@ function AppRoutes() {
             {/* Full-screen screens: own back header, no bottom nav. */}
             <Route path="/subjects/:subjectId" element={<SubjectDetailPage />} />
             <Route path="/leaderboard" element={<LeaderboardPage />} />
+            <Route path="/calendar" element={<CalendarPage />} />
             <Route element={<AppLayout />}>
               <Route path="/home" element={<HomePage />} />
               <Route path="/subjects" element={<SubjectsPage />} />

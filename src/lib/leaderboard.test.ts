@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { BOARD_SIZE, ordinal, rankStandings } from './leaderboard'
+import { BOARD_SIZE, PLINTH_HEIGHTS, PODIUM_ORDER, ordinal, rankStandings } from './leaderboard'
 import type { Standing } from '../types'
 
 function standing(uid: string, percent: number, held = 40, name = uid): Standing {
@@ -89,6 +89,24 @@ describe('rankStandings', () => {
     const input = [standing('a', 10), standing('b', 90)]
     rankStandings(input)
     expect(input.map((s) => s.uid)).toEqual(['a', 'b'])
+  })
+})
+
+describe('podium layout', () => {
+  it('stands first place in the centre, second on the left, third on the right', () => {
+    expect(PODIUM_ORDER).toEqual([1, 0, 2])
+  })
+
+  it('makes first place the tallest plinth, then second, then third', () => {
+    // Indexed by rank. A regression here is what made 2nd tower over 1st.
+    const [first, second, third] = PLINTH_HEIGHTS
+    expect(first).toBeGreaterThan(second)
+    expect(second).toBeGreaterThan(third)
+  })
+
+  it('keeps the centre plinth tallest once laid out left to right', () => {
+    const laidOut = PODIUM_ORDER.map((rank) => PLINTH_HEIGHTS[rank])
+    expect(Math.max(...laidOut)).toBe(laidOut[1])
   })
 })
 

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { AlertTriangle, ChevronRight, Trophy } from 'lucide-react'
+import { AlertTriangle, CalendarDays, ChevronRight, Trophy } from 'lucide-react'
 import { StatHero, StatTile } from '../components/attendance/StatCard'
 import { Avatar } from '../components/ui/Avatar'
 import { Spinner } from '../components/ui/Spinner'
@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext'
 import { useStats } from '../context/StatsContext'
 import { useLeaderboard } from '../hooks/useLeaderboard'
 import { ordinal } from '../lib/leaderboard'
+import { weekStartOf, weekTotals } from '../lib/calendar'
 import { firstName, unmarkedNote } from '../utils/advice'
 import { formatDayAndDate } from '../utils/date'
 
@@ -18,6 +19,8 @@ export default function HomePage() {
   const section = stats.section
   const nudge = unmarkedNote(overall)
   const { board } = useLeaderboard()
+  // The same week the calendar opens on, so the card and the page agree.
+  const thisWeek = weekTotals(stats.occurrences, stats.records, weekStartOf(stats.now))
 
   return (
     <div>
@@ -61,6 +64,25 @@ export default function HomePage() {
               <p className="text-body-sm text-warning">{nudge}</p>
             </div>
           )}
+
+          <Link
+            to="/calendar"
+            className="press mt-4 flex items-center justify-between gap-3 border-2 border-outline bg-surface-container p-4"
+            style={{ boxShadow: '4px 4px 0 0 #000' }}
+          >
+            <CalendarDays className="h-5 w-5 shrink-0 text-primary" />
+            <div className="min-w-0 flex-1">
+              <p className="font-pixel text-[9px] uppercase tracking-wider text-primary">
+                Calendar
+              </p>
+              <p className="mt-1 text-body-lg text-on-surface">
+                {thisWeek.held > 0
+                  ? `This week ${Math.round(thisWeek.percent)}% · ${thisWeek.attended} of ${thisWeek.held}`
+                  : 'See every week at a glance'}
+              </p>
+            </div>
+            <ChevronRight className="h-5 w-5 shrink-0 text-primary" />
+          </Link>
 
           <Link
             to="/leaderboard"

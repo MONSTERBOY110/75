@@ -84,6 +84,26 @@ export function minutesSinceMidnight(value: number | Date): number {
   return d.getHours() * 60 + d.getMinutes()
 }
 
+const MONTHS_LONG = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+]
+
+/** "September 2026". `month` is 0-based, like `Date`. */
+export function formatMonthYear(year: number, month: number): string {
+  return `${MONTHS_LONG[month]} ${year}`
+}
+
 /** "9 Aug 2026" */
 export function formatDate(value: number | Date): string {
   const d = new Date(value)

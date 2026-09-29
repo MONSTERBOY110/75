@@ -6,6 +6,19 @@ export const PODIUM_SIZE = 3
 export const LIST_SIZE = 12
 export const BOARD_SIZE = PODIUM_SIZE + LIST_SIZE
 
+/**
+ * Left-to-right podium layout as rank indexes: second, FIRST, third. First place
+ * stands in the centre.
+ */
+export const PODIUM_ORDER = [1, 0, 2] as const
+
+/**
+ * Plinth height in px, indexed by RANK (0 = first place), never by layout
+ * position. Mixing the two is exactly how second place once came out taller
+ * than first, so the tests pin first as the tallest.
+ */
+export const PLINTH_HEIGHTS = [104, 64, 44] as const
+
 export interface RankedStanding extends Standing {
   /** 1-based. Students level on both percent and classes held share a rank. */
   rank: number
