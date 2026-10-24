@@ -11,7 +11,16 @@ const STATUS_CHIP: Record<LogStatus, { label: string; className: string }> = {
   unmarked: { label: 'Unmarked', className: 'border-warning bg-warning/10 text-warning' },
 }
 
-/** One dated class in a subject's history. Tapping it reveals the mark controls. */
+const HOLIDAY_CHIP = {
+  label: 'Holiday',
+  className: 'border-primary/50 bg-primary/10 text-primary',
+}
+
+/**
+ * One dated class in a subject's history. Tapping it reveals the mark controls,
+ * except on a holiday: the holiday overrides any mark, so offering buttons that
+ * would visibly do nothing is worse than offering none.
+ */
 export function LogRow({
   entry,
   expanded,
@@ -25,15 +34,17 @@ export function LogRow({
   onToggle: () => void
   onMark: (status: AttendanceStatus | null) => void
 }) {
-  const chip = STATUS_CHIP[entry.status]
+  const chip = entry.holiday ? HOLIDAY_CHIP : STATUS_CHIP[entry.status]
+  const locked = Boolean(entry.holiday)
 
   return (
     <div className="border-2 border-outline bg-surface-container" style={{ boxShadow: '4px 4px 0 0 #000' }}>
       <button
         type="button"
-        onClick={onToggle}
-        aria-expanded={expanded}
-        className="flex w-full items-center justify-between gap-3 p-4 text-left"
+        onClick={locked ? undefined : onToggle}
+        disabled={locked}
+        aria-expanded={locked ? undefined : expanded}
+        className="flex w-full items-center justify-between gap-3 p-4 text-left disabled:cursor-default"
       >
         <div className="min-w-0">
           <p className="text-body-lg text-on-surface">{formatDate(entry.date)}</p>
@@ -43,11 +54,14 @@ export function LogRow({
             {/* A substitution the routine never scheduled. */}
             {entry.extra ? ' · EXTRA' : ''}
           </p>
+          {entry.holiday && (
+            <p className="mt-0.5 truncate text-body-sm text-on-surface-variant">{entry.holiday}</p>
+          )}
         </div>
         <span className={cn('chip shrink-0', chip.className)}>{chip.label}</span>
       </button>
 
-      {expanded && (
+      {expanded && !locked && (
         <div className="border-t-2 border-outline-variant p-4 pt-3">
           <MarkButtons value={entry.status} busy={busy} onMark={onMark} />
         </div>

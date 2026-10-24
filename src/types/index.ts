@@ -136,6 +136,28 @@ export interface AttendanceRecord {
   /** Only stored for extra classes, which have no slot to read a time from. */
   start?: string
   end?: string
+  /**
+   * Set only on the in-memory "no class" marks a holiday produces, to the
+   * holiday's name. Never written to Firestore: the holiday itself is stored.
+   */
+  holiday?: string
   createdAt: Timestamp | null
   updatedAt: Timestamp | null
+}
+
+/**
+ * users/{uid}/holidays/{id}
+ *
+ * Every routine class on these days counts as "no class". Stored as a range
+ * rather than as a mark per class, so one tap removes it, it survives a routine
+ * change, and a holiday set for next week applies on its own when it arrives.
+ */
+export interface Holiday {
+  id: string
+  name: string
+  /** First day, "YYYY-MM-DD" in local time. */
+  from: string
+  /** Last day, inclusive. Equal to `from` for a one-day holiday. */
+  to: string
+  createdAt: Timestamp | null
 }

@@ -8,7 +8,7 @@ import { useAuth } from '../context/AuthContext'
 import { useStats } from '../context/StatsContext'
 import { useLeaderboard } from '../hooks/useLeaderboard'
 import { ordinal } from '../lib/leaderboard'
-import { weekStartOf, weekTotals } from '../lib/calendar'
+import { weekStartOf, weekSummary } from '../lib/calendar'
 import { firstName, unmarkedNote } from '../utils/advice'
 import { formatDayAndDate } from '../utils/date'
 
@@ -20,7 +20,7 @@ export default function HomePage() {
   const nudge = unmarkedNote(overall)
   const { board } = useLeaderboard()
   // The same week the calendar opens on, so the card and the page agree.
-  const thisWeek = weekTotals(stats.occurrences, stats.records, weekStartOf(stats.now))
+  const thisWeek = weekSummary(stats.occurrences, stats.records, weekStartOf(stats.now))
 
   return (
     <div>
@@ -76,9 +76,13 @@ export default function HomePage() {
                 Calendar
               </p>
               <p className="mt-1 text-body-lg text-on-surface">
-                {thisWeek.held > 0
-                  ? `This week ${Math.round(thisWeek.percent)}% · ${thisWeek.attended} of ${thisWeek.held}`
-                  : 'See every week at a glance'}
+                {thisWeek.state === 'held'
+                  ? `This week ${Math.round(thisWeek.totals.percent)}% · ${thisWeek.totals.attended} of ${thisWeek.totals.held}`
+                  : thisWeek.state === 'holiday'
+                    ? `Holiday this week · ${thisWeek.holidayName}`
+                    : thisWeek.state === 'noClasses'
+                      ? 'No classes held this week'
+                      : 'See every week at a glance'}
               </p>
             </div>
             <ChevronRight className="h-5 w-5 shrink-0 text-primary" />

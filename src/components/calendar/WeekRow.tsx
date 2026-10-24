@@ -53,7 +53,11 @@ export function WeekRow({ week }: { week: CalendarWeek }) {
           <div
             className={cn(
               'absolute inset-0',
-              week.state === 'held' ? BAND_FILL[b] : 'bg-outline',
+              week.state === 'held'
+                ? BAND_FILL[b]
+                : week.state === 'holiday'
+                  ? 'bg-on-surface-variant'
+                  : 'bg-outline',
             )}
             style={{ clipPath: RING_CLIP }}
           />
@@ -71,6 +75,13 @@ export function WeekRow({ week }: { week: CalendarWeek }) {
                   {week.totals.attended}/{week.totals.held}
                 </span>
               </>
+            ) : week.state === 'holiday' ? (
+              <span className="flex min-w-0 items-baseline gap-2 px-3">
+                <span className="shrink-0 font-pixel text-[8px] uppercase tracking-wider text-primary">
+                  Holiday
+                </span>
+                <span className="truncate text-body-sm text-on-surface">{week.holidayName}</span>
+              </span>
             ) : (
               <span className="font-pixel text-[8px] uppercase tracking-wider text-on-surface-variant">
                 No classes held

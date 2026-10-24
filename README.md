@@ -63,6 +63,11 @@ There is no iOS equivalent. Apple only allows web apps on the home screen throug
 - **Substitution classes.** If a subject ran on a day the routine never scheduled it, add it from that
   same `+` as an extra class. Those records carry their own occurrence, so adding one adds a class to
   the subject's total and deleting it takes the class away. They are flagged `EXTRA` in the history.
+- **Holidays.** Add one day, or a range from one date to another, and every routine class in it
+  counts as *no class* without marking each day. Holidays live in `users/{uid}/holidays` and are applied
+  in memory, so removing one restores whatever was marked before. A holiday overrides marks on those
+  days; a class that still ran is added as a substitution, which a holiday never hides. Reached from
+  the Calendar, Profile, and the Mark today panel.
 - Colour bands: **≥75% blue**, 65-74% amber, **<65% red**.
 
 ## Setup
@@ -185,7 +190,7 @@ src/
   utils/        date.ts, band.ts, advice.ts, cn.ts
   types/        every Firestore document shape
   services/     writes (auth, user, attendance)
-  hooks/        reads (useAttendanceRecords, useStats, useMarking, useNow)
+  hooks/        reads (useAttendanceRecords, useHolidays, useStats, useMarking, useNow)
   context/      AuthContext, StatsContext
   components/   auth/ layout/ attendance/ ui/
   pages/        one component per route

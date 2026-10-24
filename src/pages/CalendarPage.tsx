@@ -1,5 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { CalendarOff, ChevronDown, ChevronUp } from 'lucide-react'
 import { WeekRow } from '../components/calendar/WeekRow'
 import { ScreenHeader } from '../components/ui/ScreenHeader'
 import { Spinner } from '../components/ui/Spinner'
@@ -124,6 +125,11 @@ export default function CalendarPage() {
           </span>
         ))}
       </div>
+
+      <Link to="/holidays" className="btn-ghost mt-7 w-full">
+        <CalendarOff className="h-4 w-4" />
+        Holidays
+      </Link>
     </div>
   )
 }

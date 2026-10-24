@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Plus, Trash2, X } from 'lucide-react'
+import { CalendarOff, Plus, Trash2, X } from 'lucide-react'
 import { extraSlotId, recordKey, type LogStatus } from '../../lib/attendance'
 import { useMarking } from '../../hooks/useMarking'
-import type { AttendanceRecord, AttendanceStatus, Slot, Subject } from '../../types'
+import type { AttendanceRecord, AttendanceStatus, Holiday, Slot, Subject } from '../../types'
+import { holidayOn } from '../../lib/holidays'
 import { cn } from '../../utils/cn'
 import { formatTime, fromDateKey, isoWeekday, minutesOfDay, toDateKey } from '../../utils/date'
 import { MarkButtons } from './MarkButtons'
@@ -21,6 +22,7 @@ export function AddAttendanceSheet({
   slots,
   records,
   semesterStart,
+  holidays,
   onClose,
 }: {
   open: boolean
@@ -29,6 +31,7 @@ export function AddAttendanceSheet({
   slots: Slot[]
   records: AttendanceRecord[]
   semesterStart: number
+  holidays: Holiday[]
   onClose: () => void
 }) {
   const todayKey = toDateKey(Date.now())
@@ -63,6 +66,7 @@ export function AddAttendanceSheet({
   if (!open) return null
 
   const beforeSemester = Number.isFinite(chosenMs) && chosenMs < semesterStart
+  const holiday = holidayOn(dateKey, holidays)
 
   const statusOf = (slotId: string): LogStatus =>
     records.find((r) => r.dateKey === dateKey && r.slotId === slotId)?.status ?? 'unmarked'
@@ -147,13 +151,26 @@ export function AddAttendanceSheet({
             </p>
           ) : (
             <div className="flex flex-col gap-5">
-              {matching.length === 0 && extras.length === 0 && (
-                <p className="text-body-sm text-on-surface-variant">
-                  No {subject.short} class on that day. If it ran as a substitution, add it below.
-                </p>
+              {holiday ? (
+                // The routine's classes are off for the holiday, so marking them
+                // would be overridden. A class that still ran is a substitution.
+                <div className="flex items-start gap-2 border-2 border-primary/50 bg-primary/10 px-3 py-2">
+                  <CalendarOff className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  <p className="text-body-sm text-on-surface">
+                    Holiday: {holiday.name}. {subject.short} counts as no class that day. If it
+                    still ran, add it as a substitution below.
+                  </p>
+                </div>
+              ) : (
+                matching.length === 0 &&
+                extras.length === 0 && (
+                  <p className="text-body-sm text-on-surface-variant">
+                    No {subject.short} class on that day. If it ran as a substitution, add it below.
+                  </p>
+                )
               )}
 
-              {matching.map((slot) => (
+              {!holiday && matching.map((slot) => (
                 <div key={slot.id}>
                   <p className="mb-2 text-body-sm text-on-surface-variant">
                     {formatTime(slot.start)} to {formatTime(slot.end)}

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Check, ChevronRight, LogOut, Pencil, Replace, X } from 'lucide-react'
+import { CalendarOff, Check, ChevronRight, LogOut, Pencil, Replace, X } from 'lucide-react'
 import { Avatar } from '../components/ui/Avatar'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import { Input } from '../components/ui/Input'
@@ -274,6 +274,18 @@ export default function ProfilePage() {
             <span className="flex items-center gap-2 font-pixel text-[10px] uppercase tracking-wider text-on-surface">
               <Replace className="h-4 w-4 text-primary" />
               Change section
+            </span>
+            <ChevronRight className="h-5 w-5 shrink-0 text-primary" />
+          </Link>
+
+          <Link
+            to="/holidays"
+            className="press flex min-h-14 items-center justify-between gap-3 border-2 border-outline bg-surface-container-high px-4"
+            style={{ boxShadow: '4px 4px 0 0 #000' }}
+          >
+            <span className="flex items-center gap-2 font-pixel text-[10px] uppercase tracking-wider text-on-surface">
+              <CalendarOff className="h-4 w-4 text-primary" />
+              Holidays
             </span>
             <ChevronRight className="h-5 w-5 shrink-0 text-primary" />
           </Link>

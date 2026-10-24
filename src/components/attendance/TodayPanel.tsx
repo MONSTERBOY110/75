@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { CalendarOff } from 'lucide-react'
 import { recordKey, type LogStatus } from '../../lib/attendance'
 import { useMarking, type MarkTarget } from '../../hooks/useMarking'
@@ -8,7 +9,7 @@ import { MarkButtons } from './MarkButtons'
 /** Marking surface for today's classes - the screen you open after each lecture. */
 export function TodayPanel({ stats }: { stats: Stats }) {
   const { mark, markAllNotHeld, busyKey, error } = useMarking()
-  const { todaySlots, todayKey, todayDate, records, subjectsById } = stats
+  const { todaySlots, todayKey, todayDate, records, subjectsById, holidayToday } = stats
 
   const statusOf = (slotId: string): LogStatus =>
     records.find((r) => r.dateKey === todayKey && r.slotId === slotId)?.status ?? 'unmarked'
@@ -29,7 +30,22 @@ export function TodayPanel({ stats }: { stats: Stats }) {
         <span className="text-body-sm text-on-surface-variant">{formatDayAndDate(todayDate)}</span>
       </div>
 
-      {todaySlots.length === 0 ? (
+      {holidayToday ? (
+        // On a holiday the routine's classes are already off, so marking them
+        // would do nothing. Say why instead of offering dead buttons.
+        <div
+          className="flex flex-col items-center gap-2 border-2 border-primary/50 bg-primary/10 px-5 py-7 text-center"
+          style={{ boxShadow: '4px 4px 0 0 #000' }}
+        >
+          <CalendarOff className="h-7 w-7 text-primary" />
+          <p className="font-pixel text-[10px] uppercase tracking-wider text-primary">Holiday</p>
+          <p className="text-body-lg text-on-surface">{holidayToday.name}</p>
+          <p className="text-body-sm text-on-surface-variant">
+            Today's classes count as no class. If one still ran, add it as a substitution from that
+            subject's page.
+          </p>
+        </div>
+      ) : todaySlots.length === 0 ? (
         <div className="flex flex-col items-center gap-2 border-2 border-dashed border-outline-variant py-8 text-center">
           <CalendarOff className="h-7 w-7 text-on-surface-variant" />
           <p className="text-body-sm text-on-surface-variant">No classes scheduled today.</p>
@@ -74,6 +90,14 @@ export function TodayPanel({ stats }: { stats: Stats }) {
           </button>
         </div>
       )}
+
+      {/* The day-by-day button above is what holidays replace; point there. */}
+      <Link
+        to="/holidays"
+        className="mt-4 block text-center text-body-sm text-on-surface-variant transition-opacity active:opacity-60"
+      >
+        Off for several days? <span className="text-primary">Add a holiday</span>
+      </Link>
 
       {error && <p className="mt-3 text-body-sm text-error">{error}</p>}
     </section>

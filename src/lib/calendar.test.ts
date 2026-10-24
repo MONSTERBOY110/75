@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import type { AttendanceRecord, AttendanceStatus, Slot } from '../types'
 import { aggregate, extraOccurrences, listOccurrences, recordKey, statsFor } from './attendance'
 import { CALENDAR_ROWS, monthGrid, shiftMonth, weekStartOf, weekTotals } from './calendar'
+import { applyHolidays } from './holidays'
 import { toDateKey } from '../utils/date'
 
 // 3 Aug 2026 is a Monday.
@@ -127,6 +128,34 @@ describe('week attendance', () => {
     }
     const occ = [...occurrences, ...extraOccurrences([extra], START, NOW)]
     expect(grid([extra], occ)[1].totals).toMatchObject({ held: 4, attended: 1 })
+  })
+
+  it('names the holiday when it switched off the whole week', () => {
+    const puja = [{ id: 'p', name: 'Durga Puja', from: '2026-08-09', to: '2026-08-15', createdAt: null }]
+    const applied = applyHolidays(occurrences, [], puja)
+    const week = grid(applied)[2] // Sun 9 - Sat 15 Aug
+    expect(week.state).toBe('holiday')
+    expect(week.holidayName).toBe('Durga Puja')
+    expect(week.totals).toMatchObject({ scheduled: 3, held: 0 })
+  })
+
+  it('still shows a percentage when only part of the week was a holiday', () => {
+    // Monday off; Wednesday's class still ran and was attended.
+    const monday = [{ id: 'm', name: 'Founders Day', from: '2026-08-10', to: '2026-08-10', createdAt: null }]
+    const applied = applyHolidays(occurrences, [mark(day(7, 12), 'wed-1000', 'math', 'attended')], monday)
+    const week = grid(applied)[2]
+    expect(week.state).toBe('held')
+    expect(week.holidayName).toBeUndefined()
+    expect(week.totals).toMatchObject({ held: 1, attended: 1, percent: 100 })
+  })
+
+  it('keeps a week marked off by hand distinct from a holiday', () => {
+    const records = [
+      mark(day(7, 10), 'mon-1000', 'math', 'notHeld'),
+      mark(day(7, 10), 'mon-1400', 'phys', 'notHeld'),
+      mark(day(7, 12), 'wed-1000', 'math', 'notHeld'),
+    ]
+    expect(grid(records)[2].state).toBe('noClasses')
   })
 
   it('counts a Sunday substitution in the row it sits in', () => {

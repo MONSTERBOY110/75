@@ -48,6 +48,8 @@ export type LogStatus = 'attended' | 'absent' | 'notHeld' | 'unmarked'
 
 export interface LogEntry extends Occurrence {
   status: LogStatus
+  /** The holiday that switched this class off, if any. */
+  holiday?: string
 }
 
 const EMPTY_TOTALS: Totals = {
@@ -266,9 +268,13 @@ export function band(percent: number, held: number): Band {
 export function buildLog(occurrences: Occurrence[], records: AttendanceRecord[]): LogEntry[] {
   const marks = indexRecords(records)
   return occurrences
-    .map((occurrence): LogEntry => ({
-      ...occurrence,
-      status: marks.get(recordKey(occurrence.dateKey, occurrence.slotId))?.status ?? 'unmarked',
-    }))
+    .map((occurrence): LogEntry => {
+      const record = marks.get(recordKey(occurrence.dateKey, occurrence.slotId))
+      return {
+        ...occurrence,
+        status: record?.status ?? 'unmarked',
+        ...(record?.holiday ? { holiday: record.holiday } : {}),
+      }
+    })
     .sort((a, b) => b.date - a.date || a.start.localeCompare(b.start))
 }

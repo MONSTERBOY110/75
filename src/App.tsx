@@ -5,6 +5,7 @@ import { UpdatePrompt } from './components/layout/UpdatePrompt'
 import { StatsProvider } from './context/StatsContext'
 import AddCollegePage from './pages/AddCollegePage'
 import CalendarPage from './pages/CalendarPage'
+import HolidaysPage from './pages/HolidaysPage'
 import HomePage from './pages/HomePage'
 import LeaderboardPage from './pages/LeaderboardPage'
 import ProfilePage from './pages/ProfilePage'
@@ -48,6 +49,7 @@ function AppRoutes() {
             <Route path="/subjects/:subjectId" element={<SubjectDetailPage />} />
             <Route path="/leaderboard" element={<LeaderboardPage />} />
             <Route path="/calendar" element={<CalendarPage />} />
+            <Route path="/holidays" element={<HolidaysPage />} />
             <Route element={<AppLayout />}>
               <Route path="/home" element={<HomePage />} />
               <Route path="/subjects" element={<SubjectsPage />} />

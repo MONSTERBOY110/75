@@ -11,7 +11,9 @@ import {
   type Totals,
 } from '../lib/attendance'
 import { isoWeekday, minutesOfDay, startOfDay, toDateKey } from '../utils/date'
-import type { AttendanceRecord, Section, Slot, Subject } from '../types'
+import type { AttendanceRecord, Holiday, Section, Slot, Subject } from '../types'
+import { applyHolidays, holidayOn } from '../lib/holidays'
+import { useHolidays } from './useHolidays'
 import { useAttendanceRecords } from './useAttendanceRecords'
 import { useNow } from './useNow'
 import { useResolvedSection } from './useResolvedSection'
@@ -23,8 +25,15 @@ export interface Stats {
   slots: Slot[]
   /** The section's papers, for resolving a slot or stat to a subject. */
   subjectsById: Map<string, Subject>
+  /**
+   * The student's marks with holidays applied: every routine class on a holiday
+   * reads as "no class". Count and display from this, never the raw records.
+   */
   records: AttendanceRecord[]
   occurrences: Occurrence[]
+  holidays: Holiday[]
+  /** The holiday covering today, if there is one. */
+  holidayToday: Holiday | undefined
   /** Subject ids in display order: theory first, then practicals. */
   subjectIds: string[]
   bySubject: Map<string, SubjectStat>
@@ -64,7 +73,8 @@ function placeholderSubject(id: string): Subject {
  */
 export function useComputeStats(): Stats {
   const { profile } = useAuth()
-  const { records, loading } = useAttendanceRecords()
+  const { records: rawRecords, loading } = useAttendanceRecords()
+  const { holidays, loading: holidaysLoading } = useHolidays()
   const { section, loading: sectionLoading } = useResolvedSection(
     profile?.collegeId,
     profile?.sectionId,
@@ -84,9 +94,13 @@ export function useComputeStats(): Stats {
       section && semesterStart
         ? [
             ...listOccurrences(slots, semesterStart, now),
-            ...extraOccurrences(records, semesterStart, now),
+            ...extraOccurrences(rawRecords, semesterStart, now),
           ]
         : []
+
+    // Holidays switch off every routine class they cover. Everything below -
+    // subject totals, the calendar, the history, today's panel - reads this.
+    const records = applyHolidays(occurrences, rawRecords, holidays)
 
     // Subjects come from the section, because every college has its own syllabus.
     const subjectsById = new Map<string, Subject>()
@@ -122,7 +136,7 @@ export function useComputeStats(): Stats {
       .sort((a, b) => minutesOfDay(a.start) - minutesOfDay(b.start))
 
     return {
-      loading: loading || sectionLoading,
+      loading: loading || holidaysLoading || sectionLoading,
       section,
       slots,
       subjectsById,
@@ -136,7 +150,9 @@ export function useComputeStats(): Stats {
       todaySlots,
       todayKey: toDateKey(todayDate),
       todayDate,
+      holidays,
+      holidayToday: holidayOn(toDateKey(todayDate), holidays),
       now,
     }
-  }, [section, batch, semesterStart, records, now, loading, sectionLoading])
+  }, [section, batch, semesterStart, rawRecords, holidays, now, loading, holidaysLoading, sectionLoading])
 }

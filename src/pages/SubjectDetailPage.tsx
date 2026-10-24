@@ -155,6 +155,7 @@ export default function SubjectDetailPage() {
         slots={slots}
         records={stats.records}
         semesterStart={profile?.semesterStartDate ?? 0}
+        holidays={stats.holidays}
         onClose={() => setSheetOpen(false)}
       />
     </div>
